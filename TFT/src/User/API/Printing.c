@@ -867,6 +867,13 @@ void loopPrintFromTFT(void)
     }
   }
 
+  if (ip_cur == ip_size && gcode_count != 0)  // if end of file was reached with no final '\n', enqueue the last gcode
+  {
+    gcode[gcode_count++] = '\n';
+    gcode[gcode_count] = '\0';  // terminate string
+    storeCmdFromUART(gcode, PORT_1);
+  }
+
   if (read_char != '\n')  // continue to parse the line (e.g. comment) until command end flag
   {
     // if file comment parsing is enabled and a comment tag was previously intercepted parsing the gcode, enable comment parsing
@@ -914,15 +921,11 @@ void loopPrintFromTFT(void)
       parseComment();
   }
 
-  // kisslorand 2023.XII.31: flush any gcode accumulated when the file ends without a trailing newline
-  // (otherwise the last command is silently lost and, depending on the trailing-byte pattern, the
-  // GUI may never switch to the end-print interface)
-  if (gcode_count != 0 && ip_cur >= ip_size)
-  {
-    gcode[gcode_count++] = '\n';
-    gcode[gcode_count] = '\0';
-    storeCmdFromUART(gcode, PORT_1);
-  }
+  // the "break" statements in the loops above skip "ip_cur++", so always re-align ip_cur to the real file position
+  // (otherwise ip_cur lags behind by 1 byte per parsed line and at end of file a lot of empty reads are performed).
+  // ip_cur > ip_size means a reading error, so leave it untouched
+  if (ip_cur <= ip_size)
+    ip_cur = f_tell(ip_file);
 
   if (gcode_count == 0)
     infoPrinting.fileOffset += ip_cur - infoPrinting.cur;
