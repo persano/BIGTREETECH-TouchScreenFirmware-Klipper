@@ -466,7 +466,6 @@ bool startPrint(void)
           break;
         }
 
-        infoPrinting.cur = infoPrinting.file.fptr;
         setExtrusionDuringPause(false);
 
         // load PLR info.
@@ -478,7 +477,14 @@ bool startPrint(void)
         //
         printRestore = powerFailedLoad(&infoPrinting.file);
 
+        infoPrinting.cur = infoPrinting.file.fptr;  // set after powerFailedLoad() that could have moved the file offset
+
         powerFailedCreate(infoFile.path);  // if PLR feature is enabled, open a new PLR file
+      }
+      else
+      {
+        // disable print restore flag (one shot flag), otherwise it would be applied to the next (unrelated) print
+        powerFailedSetRestore(false);
       }
       break;
 
