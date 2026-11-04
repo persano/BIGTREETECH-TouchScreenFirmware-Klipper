@@ -10,7 +10,7 @@ static const MENUITEMS moreItems = {
     {ICON_FAN,                     LABEL_FAN},
     {ICON_EXTRUDE,                 LABEL_EXTRUDE},
     {ICON_PERCENTAGE,              LABEL_PERCENTAGE},
-    {ICON_FEATURE_SETTINGS,        LABEL_FEATURE_SETTINGS},
+    {ICON_NULL,                    LABEL_NULL},
     {ICON_MACHINE_SETTINGS,        LABEL_MACHINE_SETTINGS},
     #ifdef LOAD_UNLOAD_M701_M702
       {ICON_EXTRUDE,                 LABEL_LOAD_UNLOAD_SHORT},
@@ -69,7 +69,6 @@ void menuMore(void)
         break;
 
       case KEY_ICON_4:
-        OPEN_MENU(menuFeatureSettings);
         break;
 
       case KEY_ICON_5:

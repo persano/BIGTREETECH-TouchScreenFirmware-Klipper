@@ -7,10 +7,10 @@ int main(void)
   SysTick->LOAD = 0;
   SysTick->VAL  = 0;
 
-  for (uint8_t i = 0; i < 8; i++)
-  {
-    NVIC->ICER[i] = 0xFFFFFFFF;  // disable all interrupts leftover from bootloader
-    NVIC->ICPR[i] = 0xFFFFFFFF;  // clear all pending interrupts
+  // clear NVIC for implemented IRQs (GD32F305 has 84 IRQs -> 3 registers)
+  for (uint8_t i = 0; i < 3; i++) {
+    NVIC->ICER[i] = 0xFFFFFFFF;
+    NVIC->ICPR[i] = 0xFFFFFFFF;
   }
 
   SCB->VTOR = VECT_TAB_FLASH;  // set before __enable_irq so interrupts use our vectors

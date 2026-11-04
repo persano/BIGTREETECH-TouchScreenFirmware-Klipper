@@ -30,12 +30,12 @@ _Min_Stack_Size = 0x2000;    /* required amount of stack */
 MEMORY
 {
   FLASH (rx)      : ORIGIN = 0x08007000, LENGTH = 256K - 28K
-  RAM (xrw)       : ORIGIN = 0x200000F0, LENGTH = 64K - 0xF0
+  RAM (xrw)       : ORIGIN = 0x200000F0, LENGTH = 96K - 0xF0
   MEMORY_B1 (rx)  : ORIGIN = 0x60000000, LENGTH = 0K
 }
 
 /* Highest address of the user mode stack */
-_estack = 0x20010000;    /* end of 64K RAM — bootloader (both original and patched) rejects SP above this */
+_estack = ALIGN(ORIGIN(RAM) + LENGTH(RAM) - 16, 8);
 
 /* Define output sections */
 SECTIONS

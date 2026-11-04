@@ -790,15 +790,21 @@ void menuMeshEditor(void)
   meshAllocData();  // allocates and initialize mesh data if not already allocated and initialized
   curIndex = meshData->index;
 
+  if (infoMachineSettings.firmwareType == FW_KLIPPER)
+  {
+    meshDeallocData();
+    return;
+  }
+
   mustStoreCmd("M420 V1 T1\n");  // retrieve the mesh data
 
-  // wait for mesh data to fully load before entering the menu or exit if any error occurs
+  uint32_t wait_start = OS_GetTimeMs();
+  // wait for mesh data to fully load before entering the menu or exit if timeout/error occurs
   while (meshData->status != ME_DATA_FULL)
   {
-    if (meshData->status == ME_DATA_FAILED)
+    if (meshData->status == ME_DATA_FAILED || (OS_GetTimeMs() - wait_start > 3000))
     {
       meshDeallocData();
-
       return;
     }
 

@@ -83,6 +83,14 @@ void menuBedLeveling(void)
     bedLevelingItems.items[4].icon = ICON_Z_FADE;
     bedLevelingItems.items[4].label.index = LABEL_ABL_Z;
   }
+  else if (infoMachineSettings.firmwareType == FW_KLIPPER)
+  {
+    // Mesh editor & mesh validation matrix are Marlin-specific (M420 V1 T1) - hide in Klipper
+    bedLevelingItems.items[1].icon = ICON_NULL;
+    bedLevelingItems.items[1].label.index = LABEL_NULL;
+    bedLevelingItems.items[2].icon = ICON_NULL;
+    bedLevelingItems.items[2].label.index = LABEL_NULL;
+  }
 
   if (infoMachineSettings.zProbe == ENABLED)
   {
@@ -113,6 +121,7 @@ void menuBedLeveling(void)
         break;
 
       case KEY_ICON_1:
+        if (infoMachineSettings.firmwareType == FW_KLIPPER) break;
         #if DELTA_PROBE_TYPE != 2
           OPEN_MENU(menuMeshEditor);
         #else
