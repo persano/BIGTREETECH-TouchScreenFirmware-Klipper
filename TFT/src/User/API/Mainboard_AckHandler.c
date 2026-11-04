@@ -1317,6 +1317,8 @@ void parseAck(void)
 
       if (ack_continue_seen("Marlin"))
         setupMachine(FW_MARLIN);
+      else if (ack_continue_seen("Klipper"))
+        setupMachine(FW_KLIPPER);
       else if (ack_continue_seen("RepRapFirmware"))
         setupMachine(FW_REPRAPFW);
       else if (ack_continue_seen("Smoothieware"))

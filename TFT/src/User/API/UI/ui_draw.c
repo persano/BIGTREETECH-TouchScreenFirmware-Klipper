@@ -291,7 +291,13 @@ static inline uint32_t modelFileSeekToThumbnailBase64PNG(FIL * fp, uint16_t widt
   f_lseek(fp, 0);
 
   if (!modelFileFind(fp, buf))
-    return 0;
+  {
+    // also try OrcaSlicer / BambuStudio thumbnail_PNG format
+    snprintf(buf, sizeof(buf), "; thumbnail_PNG begin %hux%hu ", width, height);
+    f_lseek(fp, 0);
+    if (!modelFileFind(fp, buf))
+      return 0;
+  }
 
   dbg_printf("Found signature '%s' at %ld\n", buf, f_tell(fp));
   // get the base64 length of the encoded PNG thumbnail file

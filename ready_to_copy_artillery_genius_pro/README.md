@@ -41,3 +41,13 @@ This directory contains everything pre-packaged for **Artillery Genius Pro** (MK
 5. The screen will display the flashing progress bar as it writes the firmware, fonts, and icons into SPI flash.
 6. When flashing finishes, the screen boots into the new Klipper Standalone UI.
 7. (Optional) Remove the SD card or keep it inserted.
+
+---
+
+### OrcaSlicer Thumbnail Setup (No Plugin Needed!)
+
+This firmware decodes stock Base64 PNG thumbnails natively on the GD32F305 MCU:
+1. In OrcaSlicer / PrusaSlicer, open **Printer Settings** -> **Basic Information**.
+2. Set **G-code thumbnails**: `300x300, 70x70`
+3. Set format to: **PNG**
+4. Export or upload directly — thumbnails will render without any postprocessing script!
