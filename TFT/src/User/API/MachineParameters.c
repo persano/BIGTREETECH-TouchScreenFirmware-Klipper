@@ -370,6 +370,7 @@ static inline bool isParameterAllowed(PARAMETER_NAME name)
     case P_DELTA_TOWER_ANGLE:
     case P_DELTA_DIAGONAL_ROD:
     case P_DELTA_ENDSTOP:
+    case P_FT_MOTION:
       return false;
     default:
       return true;
