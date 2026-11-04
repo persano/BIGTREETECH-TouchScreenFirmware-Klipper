@@ -1,9 +1,12 @@
 name: Build Test
 on:
+  workflow_dispatch:
   pull_request:
+    branches: [ main, master ]
     paths-ignore:
     - Bootloader/**
     - Copy to SD Card root directory to update/**
+    - ready_to_copy_artillery_genius_pro/**
     - images/**
     - readme/**
     - '**/*.md'
@@ -11,7 +14,6 @@ on:
 jobs:
   main:
     name: Build Test
-    if: github.repository == 'bigtreetech/BIGTREETECH-TouchScreenFirmware'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository

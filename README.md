@@ -34,6 +34,23 @@ A dedicated, standalone Klipper-first fork of the BigTreeTech TouchScreen Firmwa
 - **Direct Predecessor Fork:** [persano/BIGTREETECH-TFT](https://github.com/persano/BIGTREETECH-TFT) (branch `btt-tft28-GD32F305-artillery-genius-pro` with Genius Pro hardware adaptations and SD boot fix)
 - **Current Standalone Edition:** [persano/BIGTREETECH-TouchScreenFirmware-Klipper](https://github.com/persano/BIGTREETECH-TouchScreenFirmware-Klipper)
 
+## ⚠️ Hardware Testing & Verification Notice
+
+> [!IMPORTANT]
+> **Active Testing Scope:**
+> Only the **`MKS_GD_TFT28_V1_2_4` (Artillery Genius Pro with GD32F305)** target is actively tested and verified on physical hardware by the maintainer.
+>
+> All other prebuilt binaries and firmware targets (`BIGTREE_TFT*`, `MKS_TFT*`, etc.) are compiled via automated PlatformIO / GitHub Actions CI and are **UNTESTED on real hardware**. If you run this firmware on other display boards, please report your results!
+
+## 📦 Turnkey SD Card Pack for Artillery Genius Pro
+
+For **Artillery Genius Pro** owners, a complete, pre-configured package is ready to copy directly to your SD card root:
+👉 [**`ready_to_copy_artillery_genius_pro/`**](ready_to_copy_artillery_genius_pro/)
+- `MKSTFT28EVO.bin` (latest standalone Klipper build)
+- Fully pre-tuned `config.ini` (250000 baud, 220x220 bed, R5 P5 retract, Z3000 feedrate, 35mm edge margin, stock runout sensor enabled)
+- Complete `TFT28/bmp/` (143 icons) and `TFT28/font/` packs
+- `reset.txt` and `language_en.ini`
+
 ## Artillery Genius Pro — Custom Hardware Adaptation
 
 This firmware includes custom target support for the **Artillery Genius Pro** printer, which uses an **MKS GD TFT28 V1.2/1.4** screen with a **GD32F305VCT6** microcontroller.
