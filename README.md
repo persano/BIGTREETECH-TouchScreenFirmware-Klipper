@@ -27,11 +27,16 @@ A dedicated, standalone Klipper-first fork of the BigTreeTech TouchScreen Firmwa
 ---
 
 
-## Artillery Genius Pro — Custom Fork (branch: `btt-tft28-GD32F305-artillery-genius-pro`)
+## Repository Lineage & Base
 
-This branch is a customized build of the BTT TFT firmware targeting the **Artillery Genius Pro** printer, which uses an **MKS GD TFT28 V1.2/1.4** screen with a **GD32F305VCT6** microcontroller.
+- **Upstream Root:** [bigtreetech/BIGTREETECH-TouchScreenFirmware](https://github.com/bigtreetech/BIGTREETECH-TouchScreenFirmware)
+- **Community Base:** [kisslorand/BIGTREETECH-TFT](https://github.com/kisslorand/BIGTREETECH-TFT)
+- **Direct Predecessor Fork:** [persano/BIGTREETECH-TFT](https://github.com/persano/BIGTREETECH-TFT) (branch `btt-tft28-GD32F305-artillery-genius-pro` with Genius Pro hardware adaptations and SD boot fix)
+- **Current Standalone Edition:** [persano/BIGTREETECH-TouchScreenFirmware-Klipper](https://github.com/persano/BIGTREETECH-TouchScreenFirmware-Klipper)
 
-**Upstream base:** [kisslorand/BIGTREETECH-TFT](https://github.com/kisslorand/BIGTREETECH-TFT) — master branch (a well-maintained community fork of the original BTT firmware)
+## Artillery Genius Pro — Custom Hardware Adaptation
+
+This firmware includes custom target support for the **Artillery Genius Pro** printer, which uses an **MKS GD TFT28 V1.2/1.4** screen with a **GD32F305VCT6** microcontroller.
 
 **Build target:** `MKS_GD_TFT28_V1_2_4`
 
@@ -129,21 +134,19 @@ The GD32F305 stores settings in a 2 KB flash sector. The original code erased an
 
 ---
 
-### Known Bug — Stuck on Bootloader When No SD Card Is Inserted ⚠️
+### Fixed Bug — Stuck on Bootloader When No SD Card Is Inserted (RESOLVED) ✅
 
-**Help wanted — we don't know the root cause.**
+**Symptom:** Powering on the printer without an SD card inserted left the screen frozen on the bootloader splash screen indefinitely.
 
-**Symptom:** When the printer is powered on without an SD card inserted in the TFT slot, the screen stays on the bootloader/splash screen indefinitely and never loads the main firmware UI. Inserting an SD card and rebooting resolves it — the firmware boots normally.
+**Root Cause:**
+On the GD32F305 with MKS TFT28 hardware, calling `mountSDCard()` when no SD card was physically present entered `SD_Init()`. With an empty slot, MISO was floating and caused SPI wait loops (`SD_Wait_Ready()`) to spin for effectively infinite cycles, locking boot execution before the main UI started.
 
-**What we know:**
-- The bug exists in the upstream kisslorand fork before any of our changes are applied, so it is not introduced by the 7 PRs or the Artillery-specific modifications in this branch.
-- It appears to be specific to the **GD32F305** hardware variant (the `MKS_GD_TFT28_V1_2_4` build target). Other TFT hardware targets are not known to be affected.
-- The bootloader used is the **Artillery TFT28 V3.0.5 (GD32F305)** bootloader (found in `Bootloaders/MKS TFT28/Artillery TFT28 V3.0.5 (GD32F305)/`).
-- PR #2997 (FatFs R0.16) was applied specifically because it includes a disk-error retry loop (`handleDiskError()`) that was believed to help with SD-related stability — but it does not fix this boot-without-SD-card hang.
-
-**Suspected area:** The firmware likely performs a filesystem mount or SD card presence check very early in `main.c` or `boot.c`, and the code path when no card is found may block instead of continuing to boot. However, the exact location has not been confirmed.
-
-**If you know what causes this or have a fix, please open an issue or PR — any help is appreciated.**
+**Solution:**
+Identified and proposed in [persano/BIGTREETECH-TFT#1](https://github.com/persano/BIGTREETECH-TFT/pull/1) by [@narno2202](https://github.com/narno2202). In this repository, the fix is cleanly integrated across all hardware variants:
+1. `TFT/src/User/Hal/sd.c`: `SD_CD_Inserted()` activates `SD_CD_WP_Init()` to ensure internal pull-up is asserted with a 10µs settling delay before testing `SD_CD_PIN`.
+2. `TFT/src/User/API/boot.c`: `scanUpdates()` guards `mountSDCard()` behind `SD_CARD_PRESENT()`.
+3. `TFT/src/User/Fatfs/diskio.c`: `disk_initialize(DEV_MMC)` immediately returns `STA_NOINIT` if `!SD_CD_Inserted()`.
+When no SD card is detected, filesystem initialization is cleanly skipped, allowing immediate boot into the UI.
 
 ---
 
