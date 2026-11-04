@@ -38,4 +38,8 @@
 
 #include "pin_MKS_TFT32_V1_4.h"
 
+#ifdef SD_CD_PIN
+  #undef SD_CD_PIN
+#endif
+
 #endif

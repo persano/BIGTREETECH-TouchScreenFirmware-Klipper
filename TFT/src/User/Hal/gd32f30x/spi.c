@@ -58,7 +58,7 @@ static const uint16_t spi_mosi[_SPI_CNT] = {SPI1_MOSI_PIN, SPI2_MOSI_PIN, SPI3_M
 void SPI_GPIO_Init(uint8_t port)
 {
   GPIO_InitSet(spi_sck[port],  MGPIO_MODE_AF_PP, 0);  // SCK
-  GPIO_InitSet(spi_miso[port], MGPIO_MODE_IPN, 0);    // MISO
+  GPIO_InitSet(spi_miso[port], MGPIO_MODE_IPU, 0);    // MISO (internal pull-up prevents floating bus)
   GPIO_InitSet(spi_mosi[port], MGPIO_MODE_AF_PP, 0);  // MOSI
 }
 

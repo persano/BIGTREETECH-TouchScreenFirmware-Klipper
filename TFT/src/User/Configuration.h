@@ -1209,7 +1209,7 @@
  * Monitoring Debug
  * Uncomment/Enable to monitor/show system resources usage in Monitoring menu.
  */
-#define DEBUG_MONITORING  // Default: uncommented (enabled)
+//#define DEBUG_MONITORING  // Default: uncommented (enabled)
 
 /**
  * Generic Debug

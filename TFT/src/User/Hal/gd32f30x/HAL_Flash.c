@@ -20,7 +20,7 @@ uint32_t Find_EmptyFlashSlot()
 {
   for (uint32_t i = 0; i < (FLASH_SECTOR_SIZE / PARA_SIZE); i++)
   {
-    if (*((volatile uint32_t *)(SIGN_ADDRESS + (i * PARA_SIZE) + 1)) == EMPTY_FLASH_WORD)
+    if (*((volatile uint32_t *)(SIGN_ADDRESS + (i * PARA_SIZE))) == EMPTY_FLASH_WORD)
       return i;  // found
   }
 

@@ -165,7 +165,7 @@ uint8_t SD_Wait_Ready(void)
       return 0;  // OK
 
     t++;
-  } while (t < 0XFFFFFF);  // wait
+  } while (t < 0X1FFF);  // wait with fast timeout if no card present
 
   return 1;
 }

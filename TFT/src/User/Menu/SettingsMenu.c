@@ -9,10 +9,10 @@ static const MENUITEMS settingsItems = {
   {
     {ICON_SCREEN_SETTINGS,         LABEL_SCREEN_SETTINGS},
     {ICON_MACHINE_SETTINGS,        LABEL_MACHINE_SETTINGS},
-    {ICON_FEATURE_SETTINGS,        LABEL_FEATURE_SETTINGS},
     {ICON_SCREEN_INFO,             LABEL_SCREEN_INFO},
     {ICON_CONNECTION_SETTINGS,     LABEL_CONNECTION_SETTINGS},
     {ICON_CONNECTION_SETTINGS,     LABEL_WIFI_SETTINGS},
+    {ICON_NULL,                    LABEL_NULL},
     {ICON_NULL,                    LABEL_NULL},
     {ICON_BACK,                    LABEL_BACK},
   }
@@ -186,18 +186,14 @@ void menuSettings(void)
         break;
 
       case KEY_ICON_2:
-        OPEN_MENU(menuFeatureSettings);
-        break;
-
-      case KEY_ICON_3:
         OPEN_MENU(menuInfo);
         break;
 
-      case KEY_ICON_4:
+      case KEY_ICON_3:
         OPEN_MENU(menuConnectionSettings);
         break;
 
-      case KEY_ICON_5:
+      case KEY_ICON_4:
         OPEN_MENU(menuWifiSettings);
         break;
 

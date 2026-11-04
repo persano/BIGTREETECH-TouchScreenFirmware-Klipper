@@ -97,9 +97,9 @@
   #define SD_CS_PIN      PD11
 #endif
 
-// SD Card CD Detect pin
-#ifndef SD_CD_PIN
-  #define SD_CD_PIN PB15
+// SD Card CD Detect pin (not wired on MKS TFT boards)
+#ifdef SD_CD_PIN
+  #undef SD_CD_PIN
 #endif
 
 // USB Disk support
