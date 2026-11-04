@@ -662,8 +662,7 @@ void sendParameterCmd(PARAMETER_NAME name, uint8_t elementIndex, float Value)
 
 void saveEepromSettings(void)
 {
-  if (infoMachineSettings.EEPROM == 1)
-    mustStoreCmd("M500\n");
+  mustStoreCmd("SAVE_CONFIG\n");
 }
 
 void restoreEepromSettings(void)
