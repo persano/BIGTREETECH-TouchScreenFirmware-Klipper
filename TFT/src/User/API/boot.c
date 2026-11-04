@@ -5,6 +5,15 @@
 #define GET_FULL_PATH(buf, rootDir, filepath) sprintf(buf, STR_PATH_JOIN, rootDir, filepath)
 #define PADDING                               10
 
+#if defined(SD_SPI_SUPPORT) && defined(SD_CD_PIN)
+  // Don't even try to mount the SD card when no card is physically inserted: on the GD32F305
+  // the SPI wait loops reached from SD_Init() can spin for an effectively-infinite time with
+  // MISO floating, hanging boot while the splash screen is still displayed
+  #define SD_CARD_PRESENT() SD_CD_Inserted()
+#else
+  #define SD_CARD_PRESENT() true
+#endif
+
 typedef enum
 {
   BMP_SUCCESS,
@@ -379,7 +388,7 @@ void scanUpdates(void)
 {
   char * rootDir = NULL;
 
-  if (mountSDCard())
+  if (SD_CARD_PRESENT() && mountSDCard())
     rootDir = SD_ROOT_DIR;
   #ifdef USB_FLASH_DRIVE_SUPPORT
     // check USB flash drive for update file

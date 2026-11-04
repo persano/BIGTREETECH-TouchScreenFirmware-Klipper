@@ -3,6 +3,7 @@
 #ifdef SD_SPI_SUPPORT
 
 #include "GPIO_Init.h"
+#include "delay.h"
 #include "spi.h"
 
 // SDCard type definition
@@ -79,6 +80,15 @@ static inline void SD_CD_WP_Init(void)
 uint8_t SD_CD_Inserted(void)
 {
   #ifdef SD_CD_PIN
+    static uint8_t cdPinReady = 0;
+
+    if (!cdPinReady)  // the pin is also configured by SD_SPI_Init() but that runs inside SD_Init(),
+    {                 // which is exactly the call the presence checks are meant to avoid
+      SD_CD_WP_Init();
+      Delay_us(10);   // let the internal pull-up settle before the first sampling
+      cdPinReady = 1;
+    }
+
     return !GPIO_GetLevel(SD_CD_PIN);
   #else
     return 0;
