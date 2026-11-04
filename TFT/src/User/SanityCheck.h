@@ -334,7 +334,7 @@ extern "C" {
 #endif
 
 #if THUMBNAIL_PARSER == PARSER_BASE64PNG
-  #if RAM_SIZE < 96 || defined(TFT28_V3_0)
+  #if RAM_SIZE < 96 || defined(STM32F2XX) || defined(TFT28_V3_0)
     // decoding Base64-encoded PNGs is not possible due to memory requirements. Downgrading to the "RGB565 bitmap" option
     #undef THUMBNAIL_PARSER
     #define THUMBNAIL_PARSER PARSER_RGB565
