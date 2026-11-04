@@ -166,7 +166,7 @@ static inline uint8_t TS_CalibrationEnsure(uint16_t x, uint16_t y)
 
   if (lcd_x < x + TS_ERR_RANGE && lcd_x > x - TS_ERR_RANGE && lcd_y > y - TS_ERR_RANGE && lcd_y < y + TS_ERR_RANGE)
   {
-    Buzzer_Play(SOUND_KEYPRESS);
+    BUZZER_PLAY(SOUND_KEYPRESS);
     GUI_SetColor(DARKGREEN);
     GUI_DispStringCenter(LCD_WIDTH / 2, 62, LABEL_ADJUST_OK);
     Delay_ms(2000);
@@ -177,9 +177,11 @@ static inline uint8_t TS_CalibrationEnsure(uint16_t x, uint16_t y)
 
     GUI_SetColor(RED);
     GUI_DispStringCenter(LCD_WIDTH / 2, 62, (int32_t)LABEL_ADJUST_FAILED);
-    Buzzer_AddSound(100, 200);
+    #ifdef BUZZER_PIN
+      Buzzer_AddSound(100, 200);
+    #endif
     Delay_ms(2500);
-    Buzzer_Play(SOUND_KEYPRESS);
+    BUZZER_PLAY(SOUND_KEYPRESS);
     return 0;
   }
 
@@ -209,7 +211,7 @@ void TS_Calibrate(void)
       drawTouchTargetCross(LCD_X[tp_num], LCD_Y[tp_num], true);
 
       while (!TS_IsPressed()) {};
-      Buzzer_Play(SOUND_KEYPRESS);
+      BUZZER_PLAY(SOUND_KEYPRESS);
 
       TP_X[tp_num] = XPT2046_Repeated_Compare_AD(CMD_RDX);
       TP_Y[tp_num] = XPT2046_Repeated_Compare_AD(CMD_RDY);
