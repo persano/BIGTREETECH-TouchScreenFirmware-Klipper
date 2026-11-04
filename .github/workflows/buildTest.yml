@@ -14,7 +14,7 @@ on:
 jobs:
   main:
     name: Build Test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -22,7 +22,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.11'
           architecture: 'x64'
 
       - name: Install PlatformIO
