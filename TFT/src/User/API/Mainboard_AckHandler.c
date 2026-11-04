@@ -1,6 +1,7 @@
 #include "Mainboard_AckHandler.h"
 #include "includes.h"
 #include "RRFAckHandler.hpp"
+#include "BridgeParser.h"
 
 typedef enum  // popup message types available to display an echo message
 {
@@ -1453,6 +1454,12 @@ void parseAck(void)
         // filament_diameter > 0.01 to enable volumetric extrusion. Otherwise (<= 0.01), disable volumetric extrusion
         setParameter(P_FILAMENT_DIAMETER, 0, getParameter(P_FILAMENT_DIAMETER, 1) > 0.01f ? 1 : 0);
       }
+    }
+    // parse bridge messages
+    else if (ack_starts_with("//bridge:"))
+    {
+      avoid_terminal = true;
+      parseBridgeMessage((char *)(ack_cache + ack_index));
     }
     // check for motherboard reset (external, software, etc)
     else if (ack_seen("Reset"))

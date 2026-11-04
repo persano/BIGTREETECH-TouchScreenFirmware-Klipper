@@ -7,7 +7,7 @@ static const LABEL parameterTypes[PARAMETERS_COUNT] = {
   LABEL_MAXACCELERATION,
   LABEL_MAXFEEDRATE,
   LABEL_ACCELERATION,
-  LABEL_JERK,
+  LABEL_SQ_CORNER_VELOCITY,
   LABEL_JUNCTION_DEVIATION,
   LABEL_HOME_OFFSET,
   LABEL_FWRETRACT,
@@ -24,7 +24,7 @@ static const LABEL parameterTypes[PARAMETERS_COUNT] = {
   LABEL_DELTA_DIAGONAL_ROD,
   LABEL_DELTA_ENDSTOP,
   LABEL_PROBE_OFFSET,
-  LABEL_LIN_ADVANCE,
+  LABEL_PRESSURE_ADVANCE,
   LABEL_CURRENT_SETTING,
   LABEL_HYBRID_THRESHOLD,
   LABEL_BUMP_SENSITIVITY,
@@ -32,10 +32,10 @@ static const LABEL parameterTypes[PARAMETERS_COUNT] = {
 };
 
 static const LISTITEM eepromItems[P_SETTINGS_COUNT] = {
-// icon            item type   item title              item value text(only for custom value)
-  {CHARICON_SAVE,  LIST_LABEL, LABEL_SETTINGS_SAVE,    LABEL_NULL},
-  {CHARICON_UNDO,  LIST_LABEL, LABEL_SETTINGS_RESTORE, LABEL_NULL},
-  {CHARICON_RESET, LIST_LABEL, LABEL_SETTINGS_RESET,   LABEL_NULL},
+// icon            item type   item title                   item value text(only for custom value)
+  {CHARICON_SAVE,  LIST_LABEL, LABEL_SAVE_KLIPPER_CONFIG,   LABEL_NULL},
+  {CHARICON_RESET, LIST_LABEL, LABEL_RESTART_KLIPPER,       LABEL_NULL},
+  {CHARICON_HALT,  LIST_LABEL, LABEL_FIRMWARE_RESTART,      LABEL_NULL},
 };
 
 static uint16_t psCurPage = 0;
@@ -256,6 +256,7 @@ static void loadParameters(LISTITEM * parameterMainItem, uint16_t index, uint8_t
 // main parameter menu
 void menuParameterSettings(void)
 {
+  mustStoreCmd("M986\n");
   uint8_t enabledParameterCount = getEnabledParameterCount();
   uint8_t totalItems = (infoMachineSettings.EEPROM == 1) ? (enabledParameterCount + P_SETTINGS_COUNT) : enabledParameterCount;
   uint16_t curIndex = KEY_IDLE;
@@ -307,18 +308,18 @@ void menuParameterSettings(void)
           {
             parametersChanged = false;
 
-            popupDialog(DIALOG_TYPE_ALERT, title.index, LABEL_EEPROM_SAVE_INFO, LABEL_CONFIRM, LABEL_CANCEL,
+            popupDialog(DIALOG_TYPE_ALERT, LABEL_SAVE_KLIPPER_CONFIG, "Save config to printer.cfg and restart Klipper?", LABEL_CONFIRM, LABEL_CANCEL,
                         saveEepromSettings, NULL, NULL);
-          }
-          else if (curIndex_e == P_RESET_SETTINGS)
-          {
-            popupDialog(DIALOG_TYPE_ALERT, LABEL_SETTINGS_RESET, LABEL_SETTINGS_RESET_INFO, LABEL_CONFIRM, LABEL_CANCEL,
-                        resetEepromSettings, NULL, NULL);
           }
           else if (curIndex_e == P_RESTORE_SETTINGS)
           {
-            popupDialog(DIALOG_TYPE_ALERT, LABEL_SETTINGS_RESTORE, LABEL_EEPROM_RESTORE_INFO, LABEL_CONFIRM, LABEL_CANCEL,
+            popupDialog(DIALOG_TYPE_ALERT, LABEL_RESTART_KLIPPER, "Restart Klipper host service?", LABEL_CONFIRM, LABEL_CANCEL,
                         restoreEepromSettings, NULL, NULL);
+          }
+          else if (curIndex_e == P_RESET_SETTINGS)
+          {
+            resetEepromSettings();
+            addToast(DIALOG_TYPE_INFO, "FIRMWARE_RESTART sent");
           }
         }
         break;

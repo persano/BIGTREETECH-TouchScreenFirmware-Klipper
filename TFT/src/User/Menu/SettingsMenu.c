@@ -1,5 +1,6 @@
 #include "SettingsMenu.h"
 #include "includes.h"
+#include "WifiSettings.h"
 
 static const MENUITEMS settingsItems = {
   // title
@@ -11,7 +12,7 @@ static const MENUITEMS settingsItems = {
     {ICON_FEATURE_SETTINGS,        LABEL_FEATURE_SETTINGS},
     {ICON_SCREEN_INFO,             LABEL_SCREEN_INFO},
     {ICON_CONNECTION_SETTINGS,     LABEL_CONNECTION_SETTINGS},
-    {ICON_NULL,                    LABEL_NULL},
+    {ICON_CONNECTION_SETTINGS,     LABEL_WIFI_SETTINGS},
     {ICON_NULL,                    LABEL_NULL},
     {ICON_BACK,                    LABEL_BACK},
   }
@@ -111,7 +112,7 @@ void menuInfo(void)
   GUI_DispString(0, version[3].y0, (uint8_t *) "Firmware:");
   GUI_DispString(0, version[4].y0, (uint8_t *) "SPIFlash:");
 
-  if (infoMachineSettings.firmwareType == FW_REPRAPFW)
+  if (infoMachineSettings.firmwareType == FW_REPRAPFW || access_point[0] != '\0' || ip_address[0] != '\0')
   {
     GUI_DispString(0, version[5].y0, (uint8_t *) "WIFI    :");
     GUI_DispString(0, version[6].y0, (uint8_t *) "IP      :");
@@ -139,7 +140,7 @@ void menuInfo(void)
   sprintf(buf, "Used %.2f%% (%.2fMB/%uMB)", flashUsedPercentage(), usedMB, (W25Qxx_ReadCapacity() / 1048576));
   GUI_DispStringInPrectEOL(&version[4], (uint8_t *) buf);
 
-  if (infoMachineSettings.firmwareType == FW_REPRAPFW)
+  if (infoMachineSettings.firmwareType == FW_REPRAPFW || access_point[0] != '\0' || ip_address[0] != '\0')
   {
     GUI_DispStringInPrectEOL(&version[5], (uint8_t *) access_point);
     GUI_DispStringInPrectEOL(&version[6], (uint8_t *) ip_address);
@@ -194,6 +195,10 @@ void menuSettings(void)
 
       case KEY_ICON_4:
         OPEN_MENU(menuConnectionSettings);
+        break;
+
+      case KEY_ICON_5:
+        OPEN_MENU(menuWifiSettings);
         break;
 
       case KEY_ICON_7:

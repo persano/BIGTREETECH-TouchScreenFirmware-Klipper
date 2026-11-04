@@ -341,13 +341,37 @@ uint8_t getEnabledElement(PARAMETER_NAME name, uint8_t index)
   return p->cnt;
 }
 
+static inline bool isParameterAllowed(PARAMETER_NAME name)
+{
+  switch (name)
+  {
+    case P_STEPS_PER_MM:
+    case P_CURRENT:
+    case P_BUMPSENSITIVITY:
+    case P_HYBRID_THRESHOLD:
+    case P_FILAMENT_DIAMETER:
+    case P_HOME_OFFSET:
+    case P_STEALTH_CHOP:
+    case P_DELTA_CONFIGURATION:
+    case P_DELTA_TOWER_ANGLE:
+    case P_DELTA_DIAGONAL_ROD:
+    case P_DELTA_ENDSTOP:
+      return false;
+    default:
+      return true;
+  }
+}
+
 static inline void setParameterStatus(PARAMETER_NAME name, bool status)
 {
-  SET_BIT_VALUE(parametersEnabled, name, status);
+  if (isParameterAllowed(name))
+    SET_BIT_VALUE(parametersEnabled, name, status);
 }
 
 static inline uint8_t getParameterStatus(PARAMETER_NAME name)
 {
+  if (!isParameterAllowed(name))
+    return 0;
   return GET_BIT(parametersEnabled, name);
 }
 
@@ -622,12 +646,10 @@ void saveEepromSettings(void)
 
 void restoreEepromSettings(void)
 {
-  if (infoMachineSettings.EEPROM == 1)
-    mustStoreScript("M501\nM503 S0\n");
+  mustStoreCmd("RESTART\n");
 }
 
 void resetEepromSettings(void)
 {
-  if (infoMachineSettings.EEPROM == 1)
-    mustStoreScript("M502\nM500\nM503 S0\n");
+  mustStoreCmd("FIRMWARE_RESTART\n");
 }

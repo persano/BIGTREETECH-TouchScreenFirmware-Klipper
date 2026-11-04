@@ -1,5 +1,6 @@
 #include "MachineSettings.h"
 #include "includes.h"
+#include "KlipperMacros.h"
 
 void menuCustom(void)
 {
@@ -35,9 +36,9 @@ static void menuEepromSettings(void)
     LABEL_EEPROM_SETTINGS,
     // icon                  label
     {
-      {ICON_EEPROM_SAVE,     LABEL_SAVE},
-      {ICON_EEPROM_RESTORE,  LABEL_RESTORE},
-      {ICON_EEPROM_RESET,    LABEL_RESET},
+      {ICON_EEPROM_SAVE,     LABEL_SAVE_KLIPPER_CONFIG},
+      {ICON_RESET_VALUE,     LABEL_RESTART_KLIPPER},
+      {ICON_SHUT_DOWN,       LABEL_FIRMWARE_RESTART},
       {ICON_NULL,            LABEL_NULL},
       {ICON_NULL,            LABEL_NULL},
       {ICON_NULL,            LABEL_NULL},
@@ -57,24 +58,21 @@ static void menuEepromSettings(void)
     switch (curIndex)
     {
       case KEY_ICON_0:
-        // save to EEPROM
-        if (infoMachineSettings.EEPROM == 1)
-          popupDialog(DIALOG_TYPE_QUESTION, eepromSettingsItems.title.index, LABEL_EEPROM_SAVE_INFO,
-                      LABEL_CONFIRM, LABEL_CANCEL, saveEepromSettings, NULL, NULL);
+        // Save Config
+        popupDialog(DIALOG_TYPE_QUESTION, LABEL_SAVE_KLIPPER_CONFIG, "Save config to printer.cfg and restart Klipper?",
+                    LABEL_CONFIRM, LABEL_CANCEL, saveEepromSettings, NULL, NULL);
         break;
 
       case KEY_ICON_1:
-        // restore from EEPROM
-        if (infoMachineSettings.EEPROM == 1)
-          popupDialog(DIALOG_TYPE_QUESTION, eepromSettingsItems.title.index, LABEL_EEPROM_RESTORE_INFO,
-                      LABEL_CONFIRM, LABEL_CANCEL, restoreEepromSettings, NULL, NULL);
+        // Restart Klipper
+        popupDialog(DIALOG_TYPE_QUESTION, LABEL_RESTART_KLIPPER, "Restart Klipper host service?",
+                    LABEL_CONFIRM, LABEL_CANCEL, restoreEepromSettings, NULL, NULL);
         break;
 
       case KEY_ICON_2:
-        // reset EEPROM
-        if (infoMachineSettings.EEPROM == 1)
-          popupDialog(DIALOG_TYPE_QUESTION, eepromSettingsItems.title.index, LABEL_EEPROM_RESET_INFO,
-                      LABEL_CONFIRM, LABEL_CANCEL, resetEepromSettings, NULL, NULL);
+        // Firmware Restart
+        resetEepromSettings();
+        addToast(DIALOG_TYPE_INFO, "FIRMWARE_RESTART sent");
         break;
 
       case KEY_ICON_7:
@@ -101,7 +99,7 @@ void menuMachineSettings(void)
     {
       {ICON_PARAMETER,               LABEL_PARAMETER_SETTINGS},
       {ICON_GCODE,                   LABEL_TERMINAL},
-      {ICON_CUSTOM,                  LABEL_CUSTOM},
+      {ICON_CUSTOM,                  LABEL_KLIPPER_MACROS},
       {ICON_RGB_SETTINGS,            LABEL_RGB_SETTINGS},
       {ICON_TUNING,                  LABEL_TUNING},
       #ifdef QUICK_EEPROM_BUTTON
@@ -145,8 +143,7 @@ void menuMachineSettings(void)
         break;
 
       case KEY_ICON_2:
-        if (infoMachineSettings.firmwareType != FW_REPRAPFW)
-          OPEN_MENU(menuCustom);
+        OPEN_MENU(menuKlipperMacros);
         break;
 
       case KEY_ICON_3:

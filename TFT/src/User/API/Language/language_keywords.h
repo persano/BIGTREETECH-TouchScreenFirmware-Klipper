@@ -385,6 +385,17 @@ extern "C" {
 #define LANG_KEY_CONNECT_PROBE          "label_connect_probe:"
 #define LANG_KEY_DISCONNECT_PROBE       "label_disconnect_probe:"
 #define LANG_KEY_CALIBRATION            "label_calibration:"
+#define LANG_KEY_WIFI_SETTINGS          "label_wifi_settings:"
+#define LANG_KEY_WIFI_SCANNING          "label_wifi_scanning:"
+#define LANG_KEY_WIFI_CONNECTING        "label_wifi_connecting:"
+#define LANG_KEY_WIFI_CONNECTED         "label_wifi_connected:"
+#define LANG_KEY_WIFI_DISCONNECTED      "label_wifi_disconnected:"
+#define LANG_KEY_KLIPPER_MACROS         "label_klipper_macros:"
+#define LANG_KEY_PRESSURE_ADVANCE       "label_pressure_advance:"
+#define LANG_KEY_SQ_CORNER_VELOCITY     "label_sq_corner_velocity:"
+#define LANG_KEY_RESTART_KLIPPER        "label_restart_klipper:"
+#define LANG_KEY_FIRMWARE_RESTART       "label_firmware_restart:"
+#define LANG_KEY_SAVE_KLIPPER_CONFIG    "label_save_klipper_config:"
 
 #ifdef __cplusplus
 }

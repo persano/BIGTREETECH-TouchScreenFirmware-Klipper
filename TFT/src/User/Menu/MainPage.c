@@ -1,5 +1,6 @@
 #include "MainPage.h"
 #include "includes.h"
+#include "KlipperMacros.h"
 
 void menuMain(void)
 {
@@ -18,7 +19,7 @@ void menuMain(void)
       #endif
       {ICON_STOP,                    LABEL_EMERGENCYSTOP},
       {ICON_GCODE,                   LABEL_TERMINAL},
-      {ICON_CUSTOM,                  LABEL_CUSTOM},
+      {ICON_CUSTOM,                  LABEL_KLIPPER_MACROS},
       {ICON_SETTINGS,                LABEL_SETTINGS},
       {ICON_BACK,                    LABEL_BACK},
     }
@@ -71,16 +72,7 @@ void menuMain(void)
         break;
 
       case KEY_ICON_5:
-        if (infoMachineSettings.firmwareType != FW_REPRAPFW)
-        {
-          OPEN_MENU(menuCustom);
-        }
-        else
-        {
-          strcpy(infoFile.path, "Macros");
-
-          OPEN_MENU(menuCallMacro);
-        }
+        OPEN_MENU(menuKlipperMacros);
         break;
 
       case KEY_ICON_6:

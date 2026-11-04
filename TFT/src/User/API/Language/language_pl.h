@@ -379,4 +379,17 @@
 #define STRING_DISCONNECT_PROBE       "Upewnij się, że sonda została odłączona przed użyciem tej funkcji."
 #define STRING_CALIBRATION            "Kalibrowanie"
 
+
+#define STRING_WIFI_SETTINGS          "Wi-Fi Settings"
+#define STRING_WIFI_SCANNING          "Scanning..."
+#define STRING_WIFI_CONNECTING        "Connecting..."
+#define STRING_WIFI_CONNECTED         "Connected"
+#define STRING_WIFI_DISCONNECTED      "Disconnected"
+#define STRING_KLIPPER_MACROS         "Klipper Macros"
+#define STRING_PRESSURE_ADVANCE       "Pressure Advance"
+#define STRING_SQ_CORNER_VELOCITY     "Square Corner Velocity"
+#define STRING_RESTART_KLIPPER        "Restart Klipper"
+#define STRING_FIRMWARE_RESTART       "Firmware Restart"
+#define STRING_SAVE_KLIPPER_CONFIG    "Save Config"
+
 #endif

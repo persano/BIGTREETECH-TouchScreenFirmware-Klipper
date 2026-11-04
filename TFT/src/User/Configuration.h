@@ -186,7 +186,7 @@
  *
  *   Options: [disable: 0, enable: 1]
  */
-#define EMULATED_M109_M190 1  // Default: 1
+#define EMULATED_M109_M190 0  // Default: 0 (Klipper heating control)
 
 /**
  * Event LED
@@ -441,7 +441,7 @@
  * no matter which mode the TFT is in.
  *   Options: [disable: 0, enable: 1]
  */
-#define SERIAL_ALWAYS_ON 0  // Default: 0
+#define SERIAL_ALWAYS_ON 1  // Default: 1 (Klipper bridge)
 
 /**
  * Marlin Mode Background & Font Colors

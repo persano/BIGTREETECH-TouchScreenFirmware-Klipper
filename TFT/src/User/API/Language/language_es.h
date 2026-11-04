@@ -377,6 +377,17 @@
 #define STRING_MESH_VALID             "Mesh Validation"
 #define STRING_CONNECT_PROBE          "Connect probe before starting the process. Make sure to disconnect it afterwards."
 #define STRING_DISCONNECT_PROBE       "Make sure you have disconnected probe before using this feature."
-#define STRING_CALIBRATION            "Calibrate"
+#define STRING_CALIBRATION            "Calibrar"
+#define STRING_WIFI_SETTINGS          "Ajustes Wi-Fi"
+#define STRING_WIFI_SCANNING          "Escaneando..."
+#define STRING_WIFI_CONNECTING        "Conectando..."
+#define STRING_WIFI_CONNECTED         "Conectado"
+#define STRING_WIFI_DISCONNECTED      "Desconectado"
+#define STRING_KLIPPER_MACROS         "Macros Klipper"
+#define STRING_PRESSURE_ADVANCE       "Pressure Advance"
+#define STRING_SQ_CORNER_VELOCITY     "Vel. Esquina Cuadrada"
+#define STRING_RESTART_KLIPPER        "Reiniciar Klipper"
+#define STRING_FIRMWARE_RESTART       "Reiniciar Firmware"
+#define STRING_SAVE_KLIPPER_CONFIG    "Guardar Config"
 
 #endif

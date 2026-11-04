@@ -1,5 +1,6 @@
 #include "Tuning.h"
 #include "includes.h"
+#include "Heatsoak.h"
 
 void menuTuning(void)
 {
@@ -16,7 +17,7 @@ void menuTuning(void)
       #else
         {ICON_NULL,                    LABEL_NULL},
       #endif
-      {ICON_NULL,                    LABEL_NULL},
+      {ICON_PREHEAT,                 LABEL_WAIT_HEAT_UP},
       #ifdef DEBUG_MONITORING
         {ICON_FAST_SPEED,              LABEL_TEST},
       #else
@@ -100,6 +101,10 @@ void menuTuning(void)
           OPEN_MENU(menuMonitoring);
           break;
       #endif
+
+      case KEY_ICON_4:
+        OPEN_MENU(menuHeatsoak);
+        break;
 
       case KEY_ICON_7:
         CLOSE_MENU();
