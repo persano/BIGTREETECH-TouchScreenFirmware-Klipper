@@ -126,7 +126,7 @@ jobs:
         run: platformio run --environment MKS_GD_TFT28_V1_2_4
 
       - name: Upload Binaries Artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: all-tft-klipper-firmware-binaries
           path: .pio/build/**/*.bin
