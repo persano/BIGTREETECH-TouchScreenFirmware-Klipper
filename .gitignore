@@ -121,3 +121,7 @@ cmake-build-*
 .settings
 .classpath
 TFT/src/User/config-original.ini
+
+# References
+reference/
+references/
