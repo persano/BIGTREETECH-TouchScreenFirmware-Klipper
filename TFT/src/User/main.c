@@ -3,6 +3,16 @@
 
 int main(void)
 {
+  SysTick->CTRL = 0;           // disable bootloader's SysTick
+  SysTick->LOAD = 0;
+  SysTick->VAL  = 0;
+
+  for (uint8_t i = 0; i < 8; i++)
+  {
+    NVIC->ICER[i] = 0xFFFFFFFF;  // disable all interrupts leftover from bootloader
+    NVIC->ICPR[i] = 0xFFFFFFFF;  // clear all pending interrupts
+  }
+
   SCB->VTOR = VECT_TAB_FLASH;
   __DSB();
   __ISB();

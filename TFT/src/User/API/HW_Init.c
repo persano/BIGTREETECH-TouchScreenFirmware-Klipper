@@ -1,5 +1,6 @@
 #include "HW_Init.h"
 #include "includes.h"
+#include "GPIO_Init.h"
 
 #ifdef I2C_EEPROM  // added I2C_EEPROM support for MKS_TFT35_V1_0
   #include "i2c_eeprom.h"
@@ -56,6 +57,11 @@ void HW_Init(void)
 
   XPT2046_Init();
   OS_InitTimerMs();  // system clock timer, cycle 1ms, called after XPT2046_Init()
+
+  #ifdef SD_CS_PIN
+    GPIO_InitSet(SD_CS_PIN, MGPIO_MODE_OUT_PP, 1);  // deselect SD card so shared SPI1 is free for W25Qxx
+  #endif
+
   W25Qxx_Init();
   LCD_Init();
 

@@ -38,9 +38,9 @@
 
 #include "pin_MKS_TFT32_V1_4.h"
 
-// SD Card Detect (PB15 on MKS GD TFT28 V1.2.4, verified from working binary MKSTFT28EVO.bin @ 0x801E320)
-#ifndef SD_CD_PIN
-  #define SD_CD_PIN PB15
+// SD Card CD Detect pin (not wired on MKS TFT boards)
+#ifdef SD_CD_PIN
+  #undef SD_CD_PIN
 #endif
 
 #endif
