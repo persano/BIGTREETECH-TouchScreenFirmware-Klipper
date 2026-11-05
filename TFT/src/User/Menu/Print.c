@@ -98,7 +98,7 @@ static inline void gcodeIconDraw(void)
       break;
 
     // if model preview bmp exists, display bmp directly without writing to flash
-    if (infoMachineSettings.firmwareType == FW_REPRAPFW || !model_DirectDisplay(getIconStartPoint(i), infoFile.path))
+    if (infoFile.source >= FS_ONBOARD_MEDIA || infoMachineSettings.firmwareType == FW_REPRAPFW || !model_DirectDisplay(getIconStartPoint(i), infoFile.path))
     {
       curItem.icon = ICON_FILE;
 
@@ -475,7 +475,7 @@ void menuPrint(void)
           if (key_num == (KEY_VALUES)PRINT_KEY_ONBOARD_SD ||
               (infoMachineSettings.multiVolume == ENABLED && key_num == (KEY_VALUES)PRINT_KEY_ONBOARD_USB))
           {
-            list_mode = true;  // force list mode in onboard media
+            list_mode = infoSettings.files_list_mode;  // follow list mode setting in onboard media
             infoFile.source = FS_ONBOARD_MEDIA;
 
             OPEN_MENU(menuPrintFromSource);
