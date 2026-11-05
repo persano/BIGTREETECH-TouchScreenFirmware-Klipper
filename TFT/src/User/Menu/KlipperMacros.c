@@ -75,7 +75,7 @@ void menuKlipperMacros(void)
     mustStoreCmd("M985\n");
   }
 
-  LABEL title = {LABEL_KLIPPER_MACROS};
+  LABEL title = {LABEL_MACROS};
   uint16_t totalItems = (klipperMacros.count == 0) ? 1 : (klipperMacros.count + 1);
   listViewCreate(title, NULL, totalItems, &kmCurPage, false, NULL, loadMacroItem);
 

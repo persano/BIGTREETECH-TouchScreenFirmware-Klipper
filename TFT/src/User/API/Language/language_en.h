@@ -385,7 +385,7 @@
 #define STRING_WIFI_CONNECTING        "Connecting..."
 #define STRING_WIFI_CONNECTED         "Connected"
 #define STRING_WIFI_DISCONNECTED      "Disconnected"
-#define STRING_KLIPPER_MACROS         "Klipper Macros"
+#define STRING_KLIPPER_MACROS         "Macros"
 #define STRING_PRESSURE_ADVANCE       "Pressure Advance"
 #define STRING_SQ_CORNER_VELOCITY     "Square Corner Velocity"
 #define STRING_RESTART_KLIPPER        "Restart Klipper"

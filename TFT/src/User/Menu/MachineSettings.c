@@ -99,7 +99,7 @@ void menuMachineSettings(void)
     {
       {ICON_PARAMETER,               LABEL_PARAMETER_SETTINGS},
       {ICON_GCODE,                   LABEL_TERMINAL},
-      {ICON_CUSTOM,                  LABEL_KLIPPER_MACROS},
+      {ICON_CUSTOM,                  LABEL_MACROS},
       {ICON_RGB_SETTINGS,            LABEL_RGB_SETTINGS},
       {ICON_TUNING,                  LABEL_TUNING},
       #ifdef QUICK_EEPROM_BUTTON

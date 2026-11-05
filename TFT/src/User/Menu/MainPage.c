@@ -19,7 +19,7 @@ void menuMain(void)
       #endif
       {ICON_STOP,                    LABEL_EMERGENCYSTOP},
       {ICON_GCODE,                   LABEL_TERMINAL},
-      {ICON_CUSTOM,                  LABEL_KLIPPER_MACROS},
+      {ICON_CUSTOM,                  LABEL_MACROS},
       {ICON_SETTINGS,                LABEL_SETTINGS},
       {ICON_BACK,                    LABEL_BACK},
     }
