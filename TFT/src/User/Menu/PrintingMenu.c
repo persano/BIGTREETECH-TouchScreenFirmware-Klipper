@@ -513,7 +513,7 @@ void menuPrinting(void)
   if (lastPrinting)
   {
     setPauseResumeIcon(&printingItems, lastPause);
-    printingItems.items[KEY_ICON_5].icon = (infoFile.source < FS_ONBOARD_MEDIA && isPrintModelIcon()) ? ICON_PREVIEW : ICON_BABYSTEP;
+    printingItems.items[KEY_ICON_5].icon = (isPrintModelIcon()) ? ICON_PREVIEW : ICON_BABYSTEP;
   }
   else  // returned to this menu after print was done or aborted
   {

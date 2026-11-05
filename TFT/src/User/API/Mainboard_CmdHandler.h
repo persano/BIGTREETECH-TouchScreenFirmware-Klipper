@@ -9,7 +9,7 @@ extern "C" {
 #include <stdint.h>
 #include "SerialConnection.h"
 
-#define CMD_MAX_SIZE 100  // including ending character '\0'
+#define CMD_MAX_SIZE 160  // including ending character '\0'
 
 #define handleCmd(...)               _handleCmd(__VA_ARGS__, PORT_1)
 #define _handleCmd(a, b, ...)        handleCmd(a, b)

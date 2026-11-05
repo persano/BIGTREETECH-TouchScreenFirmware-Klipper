@@ -3,8 +3,227 @@
 #include "WifiSettings.h"
 #include "KlipperMacros.h"
 #include "KlipperParams.h"
+#include "boot.h"
 #include <stdlib.h>
 #include <string.h>
+
+typedef enum {
+  THUMB_STATE_IDLE = 0,
+  THUMB_STATE_WAIT_HEADER,
+  THUMB_STATE_STREAMING,
+} THUMB_STREAM_STATE;
+
+typedef struct {
+  THUMB_STREAM_STATE state;
+  uint8_t dest;
+  GUI_POINT target_pos;
+  uint16_t width;
+  uint16_t height;
+  uint16_t pixels_received;
+  uint16_t total_pixels;
+  uint32_t start_time;
+  bool done;
+
+  // SPI Flash write buffer
+  uint32_t flash_addr;
+  uint16_t flash_bnum;
+  uint8_t flash_buf[256];
+} THUMB_STREAM_INFO;
+
+static THUMB_STREAM_INFO thumbStream = {THUMB_STATE_IDLE, THUMB_DEST_NONE, {0, 0}, 0, 0, 0, 0, 0, false, 0, 0, {0}};
+
+static void bridgeThumbnailDone(void);
+static void bridgeThumbnailParseLine(char * line);
+
+static inline uint8_t hexCharVal(char c)
+{
+  if (c >= '0' && c <= '9') return c - '0';
+  if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+  if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+  return 0xFF;
+}
+
+static inline uint16_t parseHex16(const char * p)
+{
+  uint8_t h0 = hexCharVal(p[0]);
+  uint8_t h1 = hexCharVal(p[1]);
+  uint8_t h2 = hexCharVal(p[2]);
+  uint8_t h3 = hexCharVal(p[3]);
+  if ((h0 | h1 | h2 | h3) & 0x80) return 0;
+  return ((uint16_t)h0 << 12) | ((uint16_t)h1 << 8) | ((uint16_t)h2 << 4) | (uint16_t)h3;
+}
+
+void bridgeThumbnailRequest(const char * filename, uint8_t dest, GUI_POINT pos)
+{
+  if (filename == NULL || *filename == '\0')
+    return;
+
+  thumbStream.state = THUMB_STATE_WAIT_HEADER;
+  thumbStream.dest = dest;
+  thumbStream.target_pos = pos;
+  thumbStream.pixels_received = 0;
+  thumbStream.total_pixels = 0;
+  thumbStream.start_time = OS_GetTimeMs();
+  thumbStream.done = false;
+
+  char cmd[CMD_MAX_SIZE];
+  strcpy(cmd, "M987 S");
+  size_t len = strlen(cmd);
+
+  const char * p = filename;
+  while (*p && len + 3 < CMD_MAX_SIZE)
+  {
+    sprintf(cmd + len, "%02x", (unsigned char)*p);
+    len += 2;
+    p++;
+  }
+  strcat(cmd, "\n");
+
+  mustStoreCmd("%s", cmd);
+}
+
+void bridgeThumbnailCancel(void)
+{
+  thumbStream.state = THUMB_STATE_IDLE;
+  thumbStream.dest = THUMB_DEST_NONE;
+  thumbStream.done = false;
+  thumbStream.pixels_received = 0;
+}
+
+bool bridgeThumbnailIsActive(void)
+{
+  return (thumbStream.state != THUMB_STATE_IDLE);
+}
+
+bool bridgeThumbnailIsDone(void)
+{
+  if (thumbStream.state != THUMB_STATE_IDLE && (OS_GetTimeMs() - thumbStream.start_time > 4000))
+  {
+    bridgeThumbnailDone();
+  }
+  return thumbStream.done;
+}
+
+void bridgeThumbnailAcknowledgeDone(void)
+{
+  thumbStream.done = false;
+}
+
+static void bridgeThumbnailDone(void)
+{
+  if (thumbStream.state == THUMB_STATE_IDLE)
+    return;
+
+  if (thumbStream.dest & THUMB_DEST_FLASH)
+  {
+    if (thumbStream.flash_bnum > 0)
+    {
+      W25Qxx_WritePage(thumbStream.flash_buf, thumbStream.flash_addr, thumbStream.flash_bnum);
+      thumbStream.flash_bnum = 0;
+    }
+    if (thumbStream.pixels_received > 0)
+    {
+      setPrintModelIcon(true);
+    }
+  }
+
+  thumbStream.state = THUMB_STATE_IDLE;
+  thumbStream.done = true;
+}
+
+static void bridgeThumbnailParseLine(char * line)
+{
+  if (thumbStream.state == THUMB_STATE_IDLE)
+    return;
+
+  while (*line == ' ' || *line == ';')
+    line++;
+
+  if (*line == '\0')
+    return;
+
+  if (thumbStream.state == THUMB_STATE_WAIT_HEADER)
+  {
+    if (strlen(line) >= 8)
+    {
+      uint16_t w = parseHex16(line);
+      uint16_t h = parseHex16(line + 4);
+
+      if (w > 0 && w <= 160 && h > 0 && h <= 160)
+      {
+        thumbStream.width = w;
+        thumbStream.height = h;
+        thumbStream.total_pixels = w * h;
+        thumbStream.pixels_received = 0;
+
+        if (thumbStream.dest & THUMB_DEST_LCD)
+        {
+          LCD_SetWindow(thumbStream.target_pos.x, thumbStream.target_pos.y,
+                        thumbStream.target_pos.x + w - 1, thumbStream.target_pos.y + h - 1);
+        }
+
+        if (thumbStream.dest & THUMB_DEST_FLASH)
+        {
+          thumbStream.flash_addr = ICON_ADDR(ICON_PREVIEW);
+          uint32_t total_bytes = w * h * 2 + 4;
+          uint16_t sectors = (total_bytes + W25QXX_SECTOR_SIZE - 1) / W25QXX_SECTOR_SIZE;
+          for (uint16_t b = 0; b < sectors; b++)
+          {
+            W25Qxx_EraseSector(thumbStream.flash_addr + b * W25QXX_SECTOR_SIZE);
+          }
+          memcpy(thumbStream.flash_buf, &w, 2);
+          memcpy(thumbStream.flash_buf + 2, &h, 2);
+          thumbStream.flash_bnum = 4;
+        }
+
+        thumbStream.state = THUMB_STATE_STREAMING;
+        return;
+      }
+    }
+  }
+
+  if (thumbStream.state == THUMB_STATE_STREAMING)
+  {
+    const char * p = line;
+    while (*p && thumbStream.pixels_received < thumbStream.total_pixels)
+    {
+      if (hexCharVal(p[0]) == 0xFF)
+      {
+        p++;
+        continue;
+      }
+      if (hexCharVal(p[1]) == 0xFF || hexCharVal(p[2]) == 0xFF || hexCharVal(p[3]) == 0xFF)
+        break;
+
+      uint16_t color = parseHex16(p);
+      p += 4;
+
+      if (thumbStream.dest & THUMB_DEST_LCD)
+      {
+        LCD_WR_16BITS_DATA(color);
+      }
+
+      if (thumbStream.dest & THUMB_DEST_FLASH)
+      {
+        thumbStream.flash_buf[thumbStream.flash_bnum++] = (uint8_t)(color >> 8);
+        thumbStream.flash_buf[thumbStream.flash_bnum++] = (uint8_t)(color & 0xFF);
+        if (thumbStream.flash_bnum == 256)
+        {
+          W25Qxx_WritePage(thumbStream.flash_buf, thumbStream.flash_addr, 256);
+          thumbStream.flash_addr += 256;
+          thumbStream.flash_bnum = 0;
+        }
+      }
+
+      thumbStream.pixels_received++;
+    }
+
+    if (thumbStream.pixels_received >= thumbStream.total_pixels)
+    {
+      bridgeThumbnailDone();
+    }
+  }
+}
 
 void parseBridgeMessage(char * msg)
 {
@@ -19,7 +238,15 @@ void parseBridgeMessage(char * msg)
     end--;
   }
 
-  if (strncmp(msg, "wifi_status:", 12) == 0)
+  if (strncmp(msg, "thumb:", 6) == 0)
+  {
+    bridgeThumbnailParseLine(msg + 6);
+  }
+  else if (strcmp(msg, "thumb_done") == 0)
+  {
+    bridgeThumbnailDone();
+  }
+  else if (strncmp(msg, "wifi_status:", 12) == 0)
   {
     char * p = msg + 12;
     // Format: <0|1>|<ip>|<ssid>
