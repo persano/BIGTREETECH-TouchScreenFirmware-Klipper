@@ -1091,6 +1091,23 @@ static void parseConfigLine(void)
     }
   }
 
+  if (param_seen("pos_min:"))
+  {
+    parseConfigKey(C_INDEX_SIZE_MIN);
+    foundkeys++;
+    return;
+  }
+  if (param_seen("pos_max:"))
+  {
+    parseConfigKey(C_INDEX_SIZE_MAX);
+    foundkeys++;
+    return;
+  }
+  if (param_seen("heatsoak_rate:") || param_seen("bed_size:"))
+  {
+    return;
+  }
+
   showError(CSTAT_UNKNOWN_KEYWORD);
 }
 

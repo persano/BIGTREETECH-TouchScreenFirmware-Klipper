@@ -263,6 +263,10 @@ void setupMachine(FW_TYPE fwType)
 
     mustStoreCmd("M552\n");  // query network state, populate IP if the screen boots up after RRF
   }
+  else if (infoMachineSettings.firmwareType == FW_KLIPPER)
+  {
+    mustStoreCmd("M980\n");  // query network state from klipper-btt-tft-bridge
+  }
   else if (infoMachineSettings.firmwareType == FW_SMOOTHIEWARE)  // Smoothieware does not report detailed M115 capabilities
   { // set only the values that differ from the ones initialized in initMachineSettings() function
     #if BED_LEVELING_TYPE == 1  // if auto-detect is enabled
