@@ -985,7 +985,5 @@ void RCU_GetClocksFreq(RCC_ClocksTypeDef* RCC_Clocks)
     RCC_Clocks->PCLK2_Frequency = RCC_Clocks->HCLK_Frequency >> clk_exp;
 }
 
-/* Override platform SystemInit so startup does not run HXTAL clock config before main() */
-void SystemInit(void) {}
 
 

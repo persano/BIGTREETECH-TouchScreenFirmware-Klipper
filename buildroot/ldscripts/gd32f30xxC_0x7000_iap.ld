@@ -16,26 +16,22 @@ _Min_Stack_Size = 0x2000;    /* required amount of stack */
 /*
  * NOTE 1: RAM ORIGIN is offset by 0xF0 from 0x20000000 because the MKS GD32F305
  * bootloader corrupts the first ~240 bytes of SRAM when it jumps to the app
- * (documented by kisslorand in BTT-TFT-FW README; previously observed as
- * fanCmd[]/parameter_list[] landing in the corrupted zone).
+ * (documented by kisslorand in BTT-TFT-FW README).
  *
- * NOTE 2: RAM stays at 64K (not 96K) and _estack at 0x20010000 because EVEN
- * the patched v3.0.5 bootloader rejects app SP > 0x20010000 — empirically
- * verified 2026-06-04 when a 96K build got "stuck at completed" (bootloader
- * accepted the FW image but refused the jump-to-app). The patched bootloader
- * apparently only changes the SPI-flash-wipe and chirp behaviors, NOT the SP
- * validation. Do NOT raise LENGTH above 64K-0xF0 or _estack above 0x20010000
- * regardless of which bootloader is installed.
+ * NOTE 2: RAM is 96K on GD32F305VCT6. _estack is set to 0x20017FF0 (16 bytes
+ * below top of RAM 0x20018000), exactly matching the working reference binary.
+ * When the Artillery v3.0.5 bootloader jumps to app, it pops 8 bytes from MSP,
+ * moving MSP to 0x20017FF8 safely within physical SRAM.
  */
 MEMORY
 {
   FLASH (rx)      : ORIGIN = 0x08007000, LENGTH = 256K - 28K
-  RAM (xrw)       : ORIGIN = 0x200000F0, LENGTH = 64K - 0xF0
+  RAM (xrw)       : ORIGIN = 0x200000F0, LENGTH = 96K - 0xF0
   MEMORY_B1 (rx)  : ORIGIN = 0x60000000, LENGTH = 0K
 }
 
-/* Highest address of the user mode stack */
-_estack = 0x20010000;    /* end of 64K RAM — bootloader (both original and patched) rejects SP above this */
+/* Highest address of the user mode stack — 0x20017FF0 matches working binary */
+_estack = 0x20017FF0;
 
 /* Define output sections */
 SECTIONS
