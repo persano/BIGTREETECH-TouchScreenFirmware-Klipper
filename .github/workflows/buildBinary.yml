@@ -22,10 +22,10 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.11'
           architecture: 'x64'
@@ -126,7 +126,7 @@ jobs:
         run: platformio run --environment MKS_GD_TFT28_V1_2_4
 
       - name: Upload Binaries Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: all-tft-klipper-firmware-binaries
           path: .pio/build/**/*.bin
