@@ -99,7 +99,8 @@ bool bridgeThumbnailIsDone(void)
 {
   if (thumbStream.state != THUMB_STATE_IDLE && (OS_GetTimeMs() - thumbStream.start_time > 4000))
   {
-    bridgeThumbnailDone();
+    thumbStream.state = THUMB_STATE_IDLE;
+    thumbStream.done = true;
   }
   return thumbStream.done;
 }
@@ -111,7 +112,7 @@ void bridgeThumbnailAcknowledgeDone(void)
 
 static void bridgeThumbnailDone(void)
 {
-  if (thumbStream.state == THUMB_STATE_IDLE)
+  if (thumbStream.state == THUMB_STATE_IDLE || thumbStream.state == THUMB_STATE_WAIT_HEADER)
     return;
 
   if (thumbStream.dest & THUMB_DEST_FLASH)
@@ -244,7 +245,10 @@ void parseBridgeMessage(char * msg)
   }
   else if (strcmp(msg, "thumb_done") == 0)
   {
-    bridgeThumbnailDone();
+    if (thumbStream.state == THUMB_STATE_STREAMING)
+    {
+      bridgeThumbnailDone();
+    }
   }
   else if (strncmp(msg, "wifi_status:", 12) == 0)
   {

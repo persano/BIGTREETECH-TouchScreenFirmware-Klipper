@@ -54,6 +54,7 @@ void popupDrawPage(DIALOG_TYPE type, BUTTON * btn, const char * title, const cha
 void menuDialog(void);
 void showDialog(DIALOG_TYPE type, void (* ok_action)(void), void (* cancel_action)(void), void (* loop_action)(void));
 void loopPopup(void);
+void setDialogIcon(uint8_t icon);
 
 /**
  * @brief Displays a popup for a dialog, it needs user interaction to close it

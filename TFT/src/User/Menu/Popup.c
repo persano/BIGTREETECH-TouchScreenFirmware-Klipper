@@ -44,6 +44,14 @@ static char popup_msg[POPUP_MAX_CHAR];
 static char popup_ok[24];
 static char popup_cancel[24];
 static DIALOG_TYPE popup_type;
+static uint8_t dialog_icon = ICON_NULL;
+static bool dialog_icon_drawn = false;
+
+void setDialogIcon(uint8_t icon)
+{
+  dialog_icon = icon;
+  dialog_icon_drawn = false;
+}
 
 const GUI_RECT * dialogGetDoubleBtnRect(void)
 {
@@ -125,8 +133,25 @@ void popupDrawPage(DIALOG_TYPE type, BUTTON * btn, const char * title, const cha
     if (no && no[0])
       windowButton[buttonNum++].context = (uint8_t *) no;
 
+    bool show_icon = (dialog_icon != ICON_NULL && isPrintModelIcon());
+
     // draw a window with buttons bar
-    GUI_DrawWindow(&window, (uint8_t *) title, (uint8_t *) context, true);
+    GUI_DrawWindow(&window, (uint8_t *) title, show_icon ? NULL : (uint8_t *) context, true);
+
+    if (show_icon)
+    {
+      uint16_t title_y1 = window.rect.y0 + window.titleHeight;
+      uint16_t info_y1 = window.rect.y1 - window.actionBarHeight;
+      uint16_t icon_x = window.rect.x0 + BYTE_WIDTH;
+      uint16_t icon_y = title_y1 + (info_y1 - title_y1 - ICON_HEIGHT) / 2;
+      IMAGE_ReadDisplay(icon_x, icon_y, ICON_ADDR(dialog_icon));
+
+      GUI_SetTextMode(GUI_TEXTMODE_TRANS);
+      GUI_SetColor(window.info.fontColor);
+      GUI_DispStringInRect(icon_x + ICON_WIDTH + BYTE_WIDTH, title_y1 + 5,
+                           window.rect.x1 - 5, info_y1 - 5, (uint8_t *) context);
+      dialog_icon_drawn = true;
+    }
 
     for (uint8_t i = 0; i < buttonNum; i++)
     {
@@ -154,6 +179,8 @@ void menuDialog(void)
     switch (key_num)
     {
       case KEY_POPUP_CONFIRM:
+        dialog_icon = ICON_NULL;
+        dialog_icon_drawn = false;
         CLOSE_MENU();
 
         if (action_ok != NULL)
@@ -161,6 +188,8 @@ void menuDialog(void)
         break;
 
       case KEY_POPUP_CANCEL:
+        dialog_icon = ICON_NULL;
+        dialog_icon_drawn = false;
         CLOSE_MENU();
 
         if (action_cancel != NULL)
@@ -169,6 +198,24 @@ void menuDialog(void)
 
       default:
         break;
+    }
+
+    if (dialog_icon != ICON_NULL && isPrintModelIcon() && !dialog_icon_drawn)
+    {
+      uint16_t title_y1 = window.rect.y0 + window.titleHeight;
+      uint16_t info_y1 = window.rect.y1 - window.actionBarHeight;
+      uint16_t icon_x = window.rect.x0 + BYTE_WIDTH;
+      uint16_t icon_y = title_y1 + (info_y1 - title_y1 - ICON_HEIGHT) / 2;
+
+      GUI_SetColor(window.info.backColor);
+      GUI_FillRect(window.rect.x0 + 2, title_y1, window.rect.x1 - 2, info_y1);
+      IMAGE_ReadDisplay(icon_x, icon_y, ICON_ADDR(dialog_icon));
+
+      GUI_SetTextMode(GUI_TEXTMODE_TRANS);
+      GUI_SetColor(window.info.fontColor);
+      GUI_DispStringInRect(icon_x + ICON_WIDTH + BYTE_WIDTH, title_y1 + 5,
+                           window.rect.x1 - 5, info_y1 - 5, (uint8_t *) popup_msg);
+      dialog_icon_drawn = true;
     }
 
     if (action_loop != NULL)
