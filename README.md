@@ -153,17 +153,43 @@ The GD32F305 stores settings in a 2 KB flash sector. The original code erased an
 
 ### Fixed Bug — Stuck on Bootloader When No SD Card Is Inserted (RESOLVED) ✅
 
-**Symptom:** Powering on the printer without an SD card inserted left the screen frozen on the bootloader splash screen indefinitely.
+**Symptom:** Powering on the printer without an SD card inserted left the screen frozen on the bootloader splash screen indefinitely (or locked on a blank/white screen).
 
-**Root Cause:**
-On the GD32F305 with MKS TFT28 hardware, calling `mountSDCard()` when no SD card was physically present entered `SD_Init()`. With an empty slot, MISO was floating and caused SPI wait loops (`SD_Wait_Ready()`) to spin for effectively infinite cycles, locking boot execution before the main UI started.
+**Technical Root Causes & Fixes:**
+1. **Restored Physical SD Card Detect on `PB15`:**
+   - Upstream headers (`pin_MKS_TFT32_V1_4.h` and `pin_MKS_GD_TFT28_V1_2_4.h`) contained `#undef SD_CD_PIN` under the false assumption that MKS TFT boards do not wire the card detect switch.
+   - On the **Artillery Genius Pro (MKS GD TFT28 V1.2/V1.4 / MKS TFT28 V4.0)**, the spring-loaded microSD socket has a physical card-detect switch wired directly to **`PB15`**.
+   - When `SD_CD_PIN` was undef'd, `SD_CARD_PRESENT()` and `volumeExists()` unconditionally returned `true`. At power-on, `HW_Init()` -> `scanUpdates()` blindly called `mountSDCard()` -> `SD_Init()`. With no card in the slot, the SPI bus floated and `SD_Wait_Ready()` spun indefinitely, hanging boot before the UI could start.
+   - **Fix:** Defined `#define SD_CD_PIN PB15` in `pin_MKS_TFT32_V1_4.h`. When no card is present, `SD_CD_Inserted()` detects it immediately and skips `mountSDCard()` entirely, allowing the display to boot into the main menu in ~100 ms.
 
-**Solution:**
-Identified and proposed in [persano/BIGTREETECH-TFT#1](https://github.com/persano/BIGTREETECH-TFT/pull/1) by [@narno2202](https://github.com/narno2202). In this repository, the fix is cleanly integrated across all hardware variants:
-1. `TFT/src/User/Hal/sd.c`: `SD_CD_Inserted()` activates `SD_CD_WP_Init()` to ensure internal pull-up is asserted with a 10µs settling delay before testing `SD_CD_PIN`.
-2. `TFT/src/User/API/boot.c`: `scanUpdates()` guards `mountSDCard()` behind `SD_CARD_PRESENT()`.
-3. `TFT/src/User/Fatfs/diskio.c`: `disk_initialize(DEV_MMC)` immediately returns `STA_NOINIT` if `!SD_CD_Inserted()`.
-When no SD card is detected, filesystem initialization is cleanly skipped, allowing immediate boot into the UI.
+2. **Eliminated Out-of-Bounds NVIC Register Loop (HardFault Prevention):**
+   - An experimental bootloader interrupt cleanup loop iterated 8 times writing `0xFFFFFFFF` to `NVIC->ICER[0..7]` and `NVIC->ICPR[0..7]`.
+   - On ARM Cortex-M4 (GD32F305), the NVIC only implements indices `0..2` (up to 96 interrupt lines). Indices `3..7` map to reserved, unassigned memory space. Writing to them triggered a CPU bus fault / HardFault lockup immediately upon startup.
+   - **Fix:** Restored standard CMSIS startup sequence in `TFT/src/User/main.c` (`SystemClockInit()` and `SCB->VTOR = VECT_TAB_FLASH;`).
+
+3. **Prevented SPI0 Peripheral Remap Conflict:**
+   - In `TFT/src/User/API/HW_Init.c`, `GPIO_InitSet(SD_CS_PIN, MGPIO_MODE_OUT_PP, 0)` must pass `remap = 0`. An accidental remap argument routed SPI0 signals away from the physical display/flash bus, causing a white-screen hang.
+
+4. **Guarded Volume Bounds Check in Print Menu:**
+   - In `TFT/src/User/Menu/Print.c`, `volumeExists(infoFile.source)` was indexing `volumeSrcStatus[FF_VOLUMES]` with `FS_ONBOARD_MEDIA` (index 2), overflowing the 2-element array (which only covers `FS_TFT_SD` [0] and `FS_TFT_USB` [1]).
+   - **Fix:** Guarded with `if (infoFile.source < FS_ONBOARD_MEDIA && volumeExists(infoFile.source) != true)`.
+
+---
+
+### Onboard Media / Klipper Thumbnail Caching & Instant Popup Preview ✅
+
+1. **Dedicated SPI Flash Slot Cache (`0x7C0000`–`0x7CFFFF`):**
+   - The W25Q64 SPI flash has ~260 KB of free space above `FLASH_USED` (0x7BF000). Five 12 KB slots (`THUMB_SLOT_ADDR(0..4)`) cache the 70x70 RGB565 thumbnails for the current file page.
+   - When the host streams thumbnails via `M987`, pixels are rendered to the LCD *and* saved to the corresponding SPI flash slot simultaneously with zero latency penalty.
+2. **Instant Print Confirmation Popup Preview:**
+   - Tapping an item copies its cached 70x70 thumbnail from `THUMB_SLOT_ADDR(slot)` to `ICON_ADDR(ICON_PREVIEW)` in ~100 ms via `bridgeCopyThumbToPreview()`.
+   - The confirmation dialog renders the model preview thumbnail instantly on open.
+3. **Zero Refetch / Zero Reload on Popup Cancel:**
+   - Dismissing the confirmation popup checks `bridgeIsSlotThumbValid(i)`. If valid, it redraws the 5 icons directly from SPI flash in 15 ms. Default document placeholders are not drawn, and no `M987` requests or serial round-trips are sent to the host.
+4. **Expanded M20 Buffer (`CMD_MAX_REV`):**
+   - Increased `CMD_MAX_REV` from 5,000 to 12,000 bytes in `gcode.h`, preventing truncation of large file listings from Klipper `virtual_sdcard`.
+5. **Immediate Timeout on Missing Thumbnails:**
+   - If a G-code file lacks a thumbnail, `tftbridge` sends `//bridge:thumb_done` while the parser is in `WAIT_HEADER`. The parser now completes immediately instead of waiting for a 4-second timeout.
 
 ---
 
