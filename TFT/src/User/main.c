@@ -3,23 +3,13 @@
 
 int main(void)
 {
-  SysTick->CTRL = 0;           // disable bootloader's SysTick
-  SysTick->LOAD = 0;
-  SysTick->VAL  = 0;
-
-  for (uint8_t i = 0; i < 8; i++)
-  {
-    NVIC->ICER[i] = 0xFFFFFFFF;  // disable all interrupts leftover from bootloader
-    NVIC->ICPR[i] = 0xFFFFFFFF;  // clear all pending interrupts
-  }
-
-  SCB->VTOR = VECT_TAB_FLASH;
-  __DSB();
-  __ISB();
-
-  __enable_irq();
+  #ifdef GD32F3XX
+    __enable_irq();  // required due to enabling interrupt after vector table relocation
+  #endif
 
   SystemClockInit();  // it depends on "variants.h" included in "includes.h"
+
+  SCB->VTOR = VECT_TAB_FLASH;
 
   HW_Init();
 

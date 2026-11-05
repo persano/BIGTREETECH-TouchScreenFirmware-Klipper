@@ -82,7 +82,6 @@ void HW_Init(void)
 
   LCD_RefreshDirection(infoSettings.rotated_ui);  // refresh display direction after reading settings
   scanUpdates();                                  // scan icon, fonts and config files
-  W25Qxx_Init();                                  // re-init SPI flash: SD_Init inside mountSDCard() resets SPI1 peripheral
   checkflashSign();                               // check font/icon/config signature in SPI flash for update
   initMachineSettings();                          // load default machine settings
 

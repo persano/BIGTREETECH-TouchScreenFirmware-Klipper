@@ -264,7 +264,7 @@ static bool printPageItemSelected(uint16_t index)
       // confirm file selection
       popupDialog(DIALOG_TYPE_QUESTION, LABEL_PRINT, temp_info, LABEL_CONFIRM, LABEL_CANCEL, startPrinting, exitFolder, NULL);
 
-      hasUpdate = false;
+      hasUpdate = true;
     }
   }
 
@@ -438,7 +438,7 @@ void menuPrintFromSource(void)
     GUI_SetBkColor(infoSettings.bg_color);
 
     #ifdef SD_CD_PIN
-      if (volumeExists(infoFile.source) != true)
+      if (infoFile.source < FS_ONBOARD_MEDIA && volumeExists(infoFile.source) != true)
       {
         bridgeThumbnailCancel();
         resetInfoFile();

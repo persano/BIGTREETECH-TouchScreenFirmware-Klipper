@@ -38,9 +38,6 @@
 
 #include "pin_MKS_TFT32_V1_4.h"
 
-// SD Card CD Detect pin (not wired on MKS TFT boards)
-#ifdef SD_CD_PIN
-  #undef SD_CD_PIN
-#endif
+
 
 #endif
