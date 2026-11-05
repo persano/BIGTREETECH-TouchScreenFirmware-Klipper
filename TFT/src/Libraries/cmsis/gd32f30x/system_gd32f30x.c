@@ -100,7 +100,7 @@ static void system_clock_72m_hxtal(void);
 uint32_t SystemCoreClock = __SYSTEM_CLOCK_108M_PLL_HXTAL;
 static void system_clock_108m_hxtal(void);
 #elif defined (__SYSTEM_CLOCK_120M_PLL_HXTAL)
-uint32_t SystemCoreClock = __SYSTEM_CLOCK_120M_PLL_HXTAL;
+//uint32_t SystemCoreClock = __SYSTEM_CLOCK_120M_PLL_HXTAL; Modif_fred
 static void system_clock_120m_hxtal(void);
 #endif /* __SYSTEM_CLOCK_IRC8M */
 
