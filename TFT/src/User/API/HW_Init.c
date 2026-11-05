@@ -59,7 +59,8 @@ void HW_Init(void)
   OS_InitTimerMs();  // system clock timer, cycle 1ms, called after XPT2046_Init()
 
   #ifdef SD_CS_PIN
-    GPIO_InitSet(SD_CS_PIN, MGPIO_MODE_OUT_PP, 1);  // deselect SD card so shared SPI1 is free for W25Qxx
+    GPIO_InitSet(SD_CS_PIN, MGPIO_MODE_OUT_PP, 0);
+    GPIO_SetLevel(SD_CS_PIN, 1);  // deselect SD card so shared SPI1 is free for W25Qxx
   #endif
 
   W25Qxx_Init();
