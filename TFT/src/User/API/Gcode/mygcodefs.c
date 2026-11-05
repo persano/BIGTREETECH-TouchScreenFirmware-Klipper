@@ -41,7 +41,7 @@ static void addName(bool isFile, char * longPath, const char * shortPath, const 
   // get long name, if any
   //
 
-  if (infoMachineSettings.longFilename == ENABLED)  // if long filename is supported
+  if (longPath != NULL || infoMachineSettings.longFilename == ENABLED)  // if long filename is provided or supported
   {
     char * strPtr;
     char * name;

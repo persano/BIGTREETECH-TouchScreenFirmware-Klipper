@@ -148,8 +148,8 @@ void popupDrawPage(DIALOG_TYPE type, BUTTON * btn, const char * title, const cha
 
       GUI_SetTextMode(GUI_TEXTMODE_TRANS);
       GUI_SetColor(window.info.fontColor);
-      GUI_DispStringInRect(icon_x + ICON_WIDTH + BYTE_WIDTH, title_y1 + 5,
-                           window.rect.x1 - 5, info_y1 - 5, (uint8_t *) context);
+      GUI_DispStringInRectEOL(icon_x + ICON_WIDTH + BYTE_WIDTH, title_y1 + 5,
+                              window.rect.x1 - 5, info_y1 - 5, (uint8_t *) context);
       dialog_icon_drawn = true;
     }
 
@@ -213,8 +213,8 @@ void menuDialog(void)
 
       GUI_SetTextMode(GUI_TEXTMODE_TRANS);
       GUI_SetColor(window.info.fontColor);
-      GUI_DispStringInRect(icon_x + ICON_WIDTH + BYTE_WIDTH, title_y1 + 5,
-                           window.rect.x1 - 5, info_y1 - 5, (uint8_t *) popup_msg);
+      GUI_DispStringInRectEOL(icon_x + ICON_WIDTH + BYTE_WIDTH, title_y1 + 5,
+                              window.rect.x1 - 5, info_y1 - 5, (uint8_t *) popup_msg);
       dialog_icon_drawn = true;
     }
 

@@ -223,7 +223,7 @@ void initMachineSettings(void)
   infoMachineSettings.onboardSD               = DISABLED;
   infoMachineSettings.multiVolume             = DISABLED;
   infoMachineSettings.autoReportSDStatus      = DISABLED;
-  infoMachineSettings.longFilename            = DISABLED;
+  infoMachineSettings.longFilename            = ENABLED;
   infoMachineSettings.babyStepping            = DISABLED;
   infoMachineSettings.buildPercent            = DISABLED;
   infoMachineSettings.softwareEndstops        = ENABLED;

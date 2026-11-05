@@ -105,6 +105,18 @@ void bridgeThumbnailRequest(const char * filename, uint8_t dest, GUI_POINT pos, 
   if (filename == NULL || *filename == '\0')
     return;
 
+  // Erase flash sectors upfront before sending command to avoid blocking during serial streaming
+  if (dest & (THUMB_DEST_FLASH | THUMB_DEST_CACHE))
+  {
+    uint32_t addr = (dest & THUMB_DEST_CACHE) ? THUMB_SLOT_ADDR(slot) : ICON_ADDR(ICON_PREVIEW);
+    uint32_t total_bytes = (uint32_t)ICON_WIDTH * ICON_HEIGHT * 2 + 4;
+    uint16_t sectors = (total_bytes + W25QXX_SECTOR_SIZE - 1) / W25QXX_SECTOR_SIZE;
+    for (uint16_t b = 0; b < sectors; b++)
+    {
+      W25Qxx_EraseSector(addr + b * W25QXX_SECTOR_SIZE);
+    }
+  }
+
   thumbStream.state = THUMB_STATE_WAIT_HEADER;
   thumbStream.dest = dest;
   thumbStream.target_pos = pos;
@@ -145,7 +157,7 @@ bool bridgeThumbnailIsActive(void)
 
 bool bridgeThumbnailIsDone(void)
 {
-  if (thumbStream.state != THUMB_STATE_IDLE && (OS_GetTimeMs() - thumbStream.start_time > 4000))
+  if (thumbStream.state != THUMB_STATE_IDLE && (OS_GetTimeMs() - thumbStream.start_time > 6000))
   {
     thumbStream.state = THUMB_STATE_IDLE;
     thumbStream.done = true;
@@ -221,12 +233,6 @@ static void bridgeThumbnailParseLine(char * line)
           else
             thumbStream.flash_addr = ICON_ADDR(ICON_PREVIEW);
 
-          uint32_t total_bytes = w * h * 2 + 4;
-          uint16_t sectors = (total_bytes + W25QXX_SECTOR_SIZE - 1) / W25QXX_SECTOR_SIZE;
-          for (uint16_t b = 0; b < sectors; b++)
-          {
-            W25Qxx_EraseSector(thumbStream.flash_addr + b * W25QXX_SECTOR_SIZE);
-          }
           memcpy(thumbStream.flash_buf, &w, 2);
           memcpy(thumbStream.flash_buf + 2, &h, 2);
           thumbStream.flash_bnum = 4;
