@@ -8,7 +8,7 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
-#define CMD_MAX_REV   5000
+#define CMD_MAX_REV   12000
 #define MAX_ERROR_NUM 3
 
 typedef void (* FP_STREAM_HANDLER)(const char *);

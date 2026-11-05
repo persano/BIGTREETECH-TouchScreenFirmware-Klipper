@@ -17,6 +17,7 @@ typedef struct {
   THUMB_STREAM_STATE state;
   uint8_t dest;
   GUI_POINT target_pos;
+  uint8_t slot;
   uint16_t width;
   uint16_t height;
   uint16_t pixels_received;
@@ -30,7 +31,53 @@ typedef struct {
   uint8_t flash_buf[256];
 } THUMB_STREAM_INFO;
 
-static THUMB_STREAM_INFO thumbStream = {THUMB_STATE_IDLE, THUMB_DEST_NONE, {0, 0}, 0, 0, 0, 0, 0, false, 0, 0, {0}};
+static THUMB_STREAM_INFO thumbStream = {THUMB_STATE_IDLE, THUMB_DEST_NONE, {0, 0}, 0, 0, 0, 0, 0, 0, false, 0, 0, {0}};
+static bool slotThumbValid[THUMB_CACHE_MAX_SLOTS] = {false, false, false, false, false};
+
+void bridgeInvalidateThumbCache(void)
+{
+  for (uint8_t i = 0; i < THUMB_CACHE_MAX_SLOTS; i++)
+    slotThumbValid[i] = false;
+}
+
+bool bridgeIsSlotThumbValid(uint8_t slot)
+{
+  if (slot < THUMB_CACHE_MAX_SLOTS)
+    return slotThumbValid[slot];
+  return false;
+}
+
+void bridgeCopyThumbToPreview(uint8_t slot)
+{
+  if (slot >= THUMB_CACHE_MAX_SLOTS || !slotThumbValid[slot])
+    return;
+
+  uint32_t src_addr = THUMB_SLOT_ADDR(slot);
+  uint32_t dst_addr = ICON_ADDR(ICON_PREVIEW);
+  uint16_t w = 0, h = 0;
+  W25Qxx_ReadBuffer((uint8_t *)&w, src_addr, 2);
+  W25Qxx_ReadBuffer((uint8_t *)&h, src_addr + 2, 2);
+  if (w == 0 || w > 160 || h == 0 || h > 160)
+    return;
+
+  uint32_t total_bytes = (uint32_t)w * h * 2 + 4;
+  uint16_t sectors = (total_bytes + W25QXX_SECTOR_SIZE - 1) / W25QXX_SECTOR_SIZE;
+  for (uint16_t b = 0; b < sectors; b++)
+  {
+    W25Qxx_EraseSector(dst_addr + b * W25QXX_SECTOR_SIZE);
+  }
+
+  uint8_t buf[256];
+  uint32_t bytes_copied = 0;
+  while (bytes_copied < total_bytes)
+  {
+    uint16_t chunk = (total_bytes - bytes_copied > 256) ? 256 : (total_bytes - bytes_copied);
+    W25Qxx_ReadBuffer(buf, src_addr + bytes_copied, chunk);
+    W25Qxx_WritePage(buf, dst_addr + bytes_copied, chunk);
+    bytes_copied += chunk;
+  }
+  setPrintModelIcon(true);
+}
 
 static void bridgeThumbnailDone(void);
 static void bridgeThumbnailParseLine(char * line);
@@ -53,7 +100,7 @@ static inline uint16_t parseHex16(const char * p)
   return ((uint16_t)h0 << 12) | ((uint16_t)h1 << 8) | ((uint16_t)h2 << 4) | (uint16_t)h3;
 }
 
-void bridgeThumbnailRequest(const char * filename, uint8_t dest, GUI_POINT pos)
+void bridgeThumbnailRequest(const char * filename, uint8_t dest, GUI_POINT pos, uint8_t slot)
 {
   if (filename == NULL || *filename == '\0')
     return;
@@ -61,6 +108,7 @@ void bridgeThumbnailRequest(const char * filename, uint8_t dest, GUI_POINT pos)
   thumbStream.state = THUMB_STATE_WAIT_HEADER;
   thumbStream.dest = dest;
   thumbStream.target_pos = pos;
+  thumbStream.slot = slot;
   thumbStream.pixels_received = 0;
   thumbStream.total_pixels = 0;
   thumbStream.start_time = OS_GetTimeMs();
@@ -115,7 +163,7 @@ static void bridgeThumbnailDone(void)
   if (thumbStream.state == THUMB_STATE_IDLE || thumbStream.state == THUMB_STATE_WAIT_HEADER)
     return;
 
-  if (thumbStream.dest & THUMB_DEST_FLASH)
+  if (thumbStream.dest & (THUMB_DEST_FLASH | THUMB_DEST_CACHE))
   {
     if (thumbStream.flash_bnum > 0)
     {
@@ -124,7 +172,10 @@ static void bridgeThumbnailDone(void)
     }
     if (thumbStream.pixels_received > 0)
     {
-      setPrintModelIcon(true);
+      if (thumbStream.dest & THUMB_DEST_FLASH)
+        setPrintModelIcon(true);
+      if (thumbStream.dest & THUMB_DEST_CACHE && thumbStream.slot < THUMB_CACHE_MAX_SLOTS)
+        slotThumbValid[thumbStream.slot] = true;
     }
   }
 
@@ -163,9 +214,13 @@ static void bridgeThumbnailParseLine(char * line)
                         thumbStream.target_pos.x + w - 1, thumbStream.target_pos.y + h - 1);
         }
 
-        if (thumbStream.dest & THUMB_DEST_FLASH)
+        if (thumbStream.dest & (THUMB_DEST_FLASH | THUMB_DEST_CACHE))
         {
-          thumbStream.flash_addr = ICON_ADDR(ICON_PREVIEW);
+          if (thumbStream.dest & THUMB_DEST_CACHE)
+            thumbStream.flash_addr = THUMB_SLOT_ADDR(thumbStream.slot);
+          else
+            thumbStream.flash_addr = ICON_ADDR(ICON_PREVIEW);
+
           uint32_t total_bytes = w * h * 2 + 4;
           uint16_t sectors = (total_bytes + W25QXX_SECTOR_SIZE - 1) / W25QXX_SECTOR_SIZE;
           for (uint16_t b = 0; b < sectors; b++)
@@ -204,7 +259,7 @@ static void bridgeThumbnailParseLine(char * line)
         LCD_WR_16BITS_DATA(color);
       }
 
-      if (thumbStream.dest & THUMB_DEST_FLASH)
+      if (thumbStream.dest & (THUMB_DEST_FLASH | THUMB_DEST_CACHE))
       {
         thumbStream.flash_buf[thumbStream.flash_bnum++] = (uint8_t)(color >> 8);
         thumbStream.flash_buf[thumbStream.flash_bnum++] = (uint8_t)(color & 0xFF);
@@ -248,6 +303,11 @@ void parseBridgeMessage(char * msg)
     if (thumbStream.state == THUMB_STATE_STREAMING)
     {
       bridgeThumbnailDone();
+    }
+    else if (thumbStream.state == THUMB_STATE_WAIT_HEADER)
+    {
+      thumbStream.state = THUMB_STATE_IDLE;
+      thumbStream.done = true;
     }
   }
   else if (strncmp(msg, "wifi_status:", 12) == 0)

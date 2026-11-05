@@ -87,7 +87,7 @@ static void startNextThumbnailInQueue(void)
   {
     const char * rel_path = getOnboardRelativePath();
     GUI_POINT pos = getIconStartPoint(slot);
-    bridgeThumbnailRequest(rel_path, THUMB_DEST_LCD, pos);
+    bridgeThumbnailRequest(rel_path, THUMB_DEST_LCD | THUMB_DEST_CACHE, pos, slot);
     exitFolder();
   }
 }
@@ -152,14 +152,22 @@ static inline void gcodeIconDraw(void)
     }
     else
     {
-      curItem.icon = ICON_FILE;
-      menuDrawItem(&curItem, i);
-
-      if (thumbQueueCount < NUM_PER_PAGE)
+      if (bridgeIsSlotThumbValid(i))
       {
-        thumbQueue[thumbQueueCount].slot = i;
-        thumbQueue[thumbQueueCount].fileIndex = fIndex;
-        thumbQueueCount++;
+        GUI_POINT p = getIconStartPoint(i);
+        IMAGE_ReadDisplay(p.x, p.y, THUMB_SLOT_ADDR(i));
+      }
+      else
+      {
+        curItem.icon = ICON_FILE;
+        menuDrawItem(&curItem, i);
+
+        if (thumbQueueCount < NUM_PER_PAGE)
+        {
+          thumbQueue[thumbQueueCount].slot = i;
+          thumbQueue[thumbQueueCount].fileIndex = fIndex;
+          thumbQueueCount++;
+        }
       }
     }
 
@@ -220,6 +228,7 @@ static bool printPageItemSelected(uint16_t index)
     }
     else
     {
+      bridgeInvalidateThumbCache();
       scanPrintFiles();
       infoFile.curPage = 0;
     }
@@ -247,12 +256,17 @@ static bool printPageItemSelected(uint16_t index)
       }
       else
       {
-        setPrintModelIcon(false);
-        bridgeThumbnailCancel();
-        thumbQueueCount = 0;
-        thumbQueueIndex = 0;
-        const char * rel_path = getOnboardRelativePath();
-        bridgeThumbnailRequest(rel_path, THUMB_DEST_FLASH, (GUI_POINT){0, 0});
+        uint8_t slot = index % NUM_PER_PAGE;
+        if (bridgeIsSlotThumbValid(slot))
+        {
+          bridgeCopyThumbToPreview(slot);
+        }
+        else
+        {
+          setPrintModelIcon(false);
+          const char * rel_path = getOnboardRelativePath();
+          bridgeThumbnailRequest(rel_path, THUMB_DEST_FLASH, (GUI_POINT){0, 0}, 0);
+        }
       }
 
       char temp_info[FILE_NUM + 50];
@@ -264,7 +278,7 @@ static bool printPageItemSelected(uint16_t index)
       // confirm file selection
       popupDialog(DIALOG_TYPE_QUESTION, LABEL_PRINT, temp_info, LABEL_CONFIRM, LABEL_CANCEL, startPrinting, exitFolder, NULL);
 
-      hasUpdate = true;
+      hasUpdate = false;
     }
   }
 
@@ -338,6 +352,7 @@ void menuPrintFromSource(void)
           if (infoFile.curPage > 0)
           {
             infoFile.curPage--;
+            bridgeInvalidateThumbCache();
             update = 2;  // request no title bar update
           }
           break;
@@ -347,12 +362,14 @@ void menuPrintFromSource(void)
           if (infoFile.curPage + 1 < pageCount)
           {
             infoFile.curPage++;
+            bridgeInvalidateThumbCache();
             update = 2;  // request no title bar update
           }
           break;
 
         case KEY_ICON_7:
           infoFile.curPage = 0;
+          bridgeInvalidateThumbCache();
 
           if (isRootFolder())
           {
@@ -462,9 +479,13 @@ void menuPrintFromSource(void)
 
     loopProcess();
   }
-  bridgeThumbnailCancel();
-  thumbQueueCount = 0;
-  thumbQueueIndex = 0;
+  if (infoMenu.menu[infoMenu.cur] != menuDialog)
+  {
+    bridgeThumbnailCancel();
+    bridgeInvalidateThumbCache();
+    thumbQueueCount = 0;
+    thumbQueueIndex = 0;
+  }
 }
 
 void menuPrint(void)
