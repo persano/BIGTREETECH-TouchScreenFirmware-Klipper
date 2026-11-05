@@ -82,6 +82,7 @@ static void abortAndTerminate(void)
 
   if (infoMachineSettings.firmwareType != FW_REPRAPFW)
   {
+    sendEmergencyCmd("CANCEL_PRINT\n");
     sendEmergencyCmd("M524\n");
   }
   else  // if RepRap
@@ -107,8 +108,10 @@ static void waitForAbort(void)
   popupSplash(DIALOG_TYPE_INFO, LABEL_SCREEN_INFO, LABEL_BUSY);
   loopPopup();  // trigger the immediate draw of the above popup
 
+  uint32_t startMs = OS_GetTimeMs();
+
   // send M108 with a minimum interval of 10ms (to avoid unknown command error messages) if a reply has been also received
-  TASK_LOOP_WHILE(!infoPrinting.aborted,
+  TASK_LOOP_WHILE(!infoPrinting.aborted && (OS_GetTimeMs() - startMs < 3000),
                   if (OS_GetTimeMs() - Serial_GetTimestampTX(SERIAL_PORT) >= 10 &&
                       (rIndex = Serial_GetReadingIndexRX(SERIAL_PORT)) != rIndex_old)
                   {
@@ -116,6 +119,11 @@ static void waitForAbort(void)
                     rIndex_old = rIndex;
                   }
                  );
+
+  if (!infoPrinting.aborted)
+  {
+    setPrintAbort();
+  }
 
   // remove any enqueued command that could come from TFT media or a supplementary serial port
   // (if printing from TFT media or remote host) during the loop above

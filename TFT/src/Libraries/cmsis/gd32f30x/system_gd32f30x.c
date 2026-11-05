@@ -985,5 +985,9 @@ void RCU_GetClocksFreq(RCC_ClocksTypeDef* RCC_Clocks)
     RCC_Clocks->PCLK2_Frequency = RCC_Clocks->HCLK_Frequency >> clk_exp;
 }
 
+void SystemInit (void)
+{
+}
+
 
 
