@@ -127,7 +127,7 @@ void bridgeThumbnailRequest(const char * filename, uint8_t dest, GUI_POINT pos, 
   thumbStream.done = false;
 
   char cmd[CMD_MAX_SIZE];
-  strcpy(cmd, "M987 S");
+  sprintf(cmd, "M987 P%d S", slot);
   size_t len = strlen(cmd);
 
   const char * p = filename;
@@ -182,7 +182,7 @@ static void bridgeThumbnailDone(void)
       W25Qxx_WritePage(thumbStream.flash_buf, thumbStream.flash_addr, thumbStream.flash_bnum);
       thumbStream.flash_bnum = 0;
     }
-    if (thumbStream.pixels_received > 0)
+    if (thumbStream.pixels_received >= thumbStream.total_pixels && thumbStream.total_pixels > 0)
     {
       if (thumbStream.dest & THUMB_DEST_FLASH)
         setPrintModelIcon(true);
@@ -208,7 +208,7 @@ static void bridgeThumbnailParseLine(char * line)
 
   if (thumbStream.state == THUMB_STATE_WAIT_HEADER)
   {
-    if (strlen(line) >= 8)
+    if (strlen(line) == 8)
     {
       uint16_t w = parseHex16(line);
       uint16_t h = parseHex16(line + 4);
@@ -280,10 +280,7 @@ static void bridgeThumbnailParseLine(char * line)
       thumbStream.pixels_received++;
     }
 
-    if (thumbStream.pixels_received >= thumbStream.total_pixels)
-    {
-      bridgeThumbnailDone();
-    }
+    /* Wait for //bridge:thumb_done before marking complete to avoid race conditions */
   }
 }
 
@@ -304,8 +301,17 @@ void parseBridgeMessage(char * msg)
   {
     bridgeThumbnailParseLine(msg + 6);
   }
-  else if (strcmp(msg, "thumb_done") == 0)
+  else if (strncmp(msg, "thumb_done", 10) == 0)
   {
+    if (msg[10] == ':')
+    {
+      uint8_t done_slot = (uint8_t)atoi(msg + 11);
+      if (done_slot != thumbStream.slot)
+      {
+        return; // Stale completion from previous or cancelled thumbnail
+      }
+    }
+
     if (thumbStream.state == THUMB_STATE_STREAMING)
     {
       bridgeThumbnailDone();
